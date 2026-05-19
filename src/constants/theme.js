@@ -1,0 +1,33 @@
+export const LIGHT = {
+  bg: '#F7F4ED',
+  surface: '#FFFDF8',
+  surface2: '#EDE9DF',
+  border: '#DDD8CE',
+  border2: '#C8C3B8',
+  text1: '#1A1820',
+  text2: '#6B6876',
+  text3: '#A09EA8',
+  green: '#37C978',
+  red: '#E04F4F',
+  gold: '#E8A020',
+  blue: '#4B82F1',
+  brand: '#37C978',
+  brandDim: 'rgba(55,201,120,0.12)',
+};
+
+export const DARK = {
+  bg: '#0D0D0D',
+  surface: '#15151A',
+  surface2: '#1E1E24',
+  border: '#262630',
+  border2: '#353540',
+  text1: '#F5F5F5',
+  text2: '#A8A8B0',
+  text3: '#5A5A66',
+  green: '#4AE08A',
+  red: '#FF6B6B',
+  gold: '#FBB840',
+  blue: '#60A5FA',
+  brand: '#4AE08A',
+  brandDim: 'rgba(74,224,138,0.12)',
+};
