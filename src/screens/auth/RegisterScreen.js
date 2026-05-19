@@ -154,6 +154,17 @@ export default function RegisterScreen({ navigation }) {
               <Text style={{ color: colors.brand, fontSize: 14, fontWeight: '600' }}>{t('signInLink')}</Text>
             </TouchableOpacity>
           </View>
+
+          <View style={styles.legalRow}>
+            <Text style={{ color: colors.text3, fontSize: 12 }}>{t('registerAgreeTerms')} </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Legal', { type: 'terms' })}>
+              <Text style={{ color: colors.text3, fontSize: 12, textDecorationLine: 'underline' }}>{t('termsOfService')}</Text>
+            </TouchableOpacity>
+            <Text style={{ color: colors.text3, fontSize: 12 }}> {t('registerAnd')} </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Legal', { type: 'privacy' })}>
+              <Text style={{ color: colors.text3, fontSize: 12, textDecorationLine: 'underline' }}>{t('privacyPolicy')}</Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -174,4 +185,5 @@ const styles = StyleSheet.create({
   toggleText: { fontSize: 13, fontWeight: '600' },
   errorBox: { padding: 12, borderRadius: 10, borderWidth: 1, marginTop: 8 },
   switchRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
+  legalRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap', marginTop: 16 },
 });

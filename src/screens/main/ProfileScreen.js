@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   TextInput, ActivityIndicator, Modal,
@@ -31,6 +32,7 @@ function Section({ title, children, colors }) {
 }
 
 export default function ProfileScreen() {
+  const navigation = useNavigation();
   const { colors, isDark, themeMode, setThemeMode } = useTheme();
   const { t, lang, langMode, setLangMode } = useLang();
   const { currentUser, updateUser, handleLogout } = useAuth();
@@ -215,6 +217,17 @@ export default function ProfileScreen() {
           <Text style={s.signOutText}>{t('signOut')}</Text>
         </TouchableOpacity>
 
+        {/* Legal links */}
+        <View style={s.legalRow}>
+          <TouchableOpacity onPress={() => navigation.navigate('Legal', { type: 'terms' })}>
+            <Text style={s.legalLink}>{t('termsOfService')}</Text>
+          </TouchableOpacity>
+          <Text style={s.legalDot}>·</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Legal', { type: 'privacy' })}>
+            <Text style={s.legalLink}>{t('privacyPolicy')}</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Advanced toggle */}
         <TouchableOpacity
           style={s.advancedToggle}
@@ -346,6 +359,10 @@ const makeStyles = (colors) => StyleSheet.create({
   prefDivider: { borderTopWidth: 1, borderTopColor: colors.border },
   prefLabel: { flex: 1, fontSize: 14, fontWeight: '500', color: colors.text1 },
   prefDropdown: { minWidth: 140 },
+
+  legalRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, paddingVertical: 4, marginBottom: 4 },
+  legalLink: { fontSize: 12, color: colors.text3, textDecorationLine: 'underline' },
+  legalDot: { fontSize: 12, color: colors.text3 },
 
   advancedToggle: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',

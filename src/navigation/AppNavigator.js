@@ -10,6 +10,7 @@ import LandingScreen from '../screens/auth/LandingScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
+import LegalScreen from '../screens/auth/LegalScreen';
 
 import DashboardScreen from '../screens/main/DashboardScreen';
 import TransactionsScreen from '../screens/main/TransactionsScreen';
@@ -77,6 +78,7 @@ function MainStack() {
     <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
       <Stack.Screen name="MainTabs" component={MainTabs} />
       <Stack.Screen name="Recurring" component={RecurringScreen} />
+      <Stack.Screen name="Legal" component={LegalScreen} />
     </Stack.Navigator>
   );
 }
@@ -95,6 +97,7 @@ export default function AppNavigator() {
             <Stack.Screen name="Login"          component={LoginScreen} />
             <Stack.Screen name="Register"       component={RegisterScreen} />
             <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+            <Stack.Screen name="Legal" component={LegalScreen} />
           </>
         ) : (
           <Stack.Screen name="Main" component={MainStack} />
