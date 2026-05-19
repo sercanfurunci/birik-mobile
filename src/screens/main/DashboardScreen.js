@@ -1,6 +1,7 @@
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, StatusBar, Dimensions, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../../context/ThemeContext';
 import { useLang } from '../../context/LangContext';
 import { useAuth } from '../../context/AuthContext';
@@ -23,10 +24,10 @@ export default function DashboardScreen({ navigation }) {
   const [subscriptions, setSubscriptions] = useState([]);
   const [selectedDay, setSelectedDay] = useState(null);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     authFetch(`${API}/goals`).then(r => r.json()).then(d => Array.isArray(d) && setGoals(d)).catch(() => {});
     authFetch(`${API}/subscriptions`).then(r => r.json()).then(d => Array.isArray(d) && setSubscriptions(d)).catch(() => {});
-  }, []);
+  }, []));
 
   // Summary calculations
   const incomeTxs = transactions.filter(tx => tx.type === 'income');
