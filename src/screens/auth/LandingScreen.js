@@ -1,7 +1,14 @@
-import { View, Text, TouchableOpacity, StyleSheet, StatusBar, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, StatusBar, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../context/ThemeContext';
 import { useLang } from '../../context/LangContext';
+
+const FEATURES = [
+  { icon: '⚡', titleKey: 'landingFeature1Title', descKey: 'landingFeature1Desc' },
+  { icon: '📊', titleKey: 'landingFeature2Title', descKey: 'landingFeature2Desc' },
+  { icon: '🎯', titleKey: 'landingFeature3Title', descKey: 'landingFeature3Desc' },
+  { icon: '🔄', titleKey: 'landingFeature4Title', descKey: 'landingFeature4Desc' },
+];
 
 export default function LandingScreen({ navigation }) {
   const { colors, toggleTheme, isDark } = useTheme();
@@ -10,13 +17,17 @@ export default function LandingScreen({ navigation }) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.bg} />
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+
         {/* Top bar */}
         <View style={styles.topBar}>
-          <Text style={[styles.logo, { color: colors.brand }]}>⬡</Text>
+          <View style={styles.brandRow}>
+            <Image source={require('../../../assets/birik-icon.png')} style={styles.logoImg} />
+            <Text style={[styles.brandName, { color: colors.text1 }]}>{t('appName')}</Text>
+          </View>
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <TouchableOpacity onPress={toggleLang} style={[styles.iconBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-              <Text style={{ color: colors.text2, fontSize: 12, fontWeight: '600' }}>{lang === 'en' ? 'TR' : 'EN'}</Text>
+              <Text style={{ color: colors.text2, fontSize: 12, fontWeight: '600' }}>{lang === 'tr' ? 'EN' : 'TR'}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={toggleTheme} style={[styles.iconBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}>
               <Text style={{ fontSize: 14 }}>{isDark ? '☀️' : '🌙'}</Text>
@@ -57,24 +68,19 @@ export default function LandingScreen({ navigation }) {
         </View>
 
         {/* Features */}
-        {[
-          { icon: '⚡', title: 'Add a transaction in seconds', desc: 'Type a description, enter the amount, pick a category.' },
-          { icon: '📊', title: 'See your spending at a glance', desc: 'Dashboard shows balance, recent activity, and 30-day breakdown.' },
-          { icon: '🎯', title: 'Set savings goals', desc: 'Create goals and watch the progress bar fill up as you save.' },
-          { icon: '🔄', title: 'Track subscriptions', desc: 'Never lose track of recurring services and billing dates.' },
-        ].map((f, i) => (
+        {FEATURES.map((f, i) => (
           <View key={i} style={[styles.featureCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Text style={styles.featureIcon}>{f.icon}</Text>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.featureTitle, { color: colors.text1 }]}>{f.title}</Text>
-              <Text style={[styles.featureDesc, { color: colors.text3 }]}>{f.desc}</Text>
+              <Text style={[styles.featureTitle, { color: colors.text1 }]}>{t(f.titleKey)}</Text>
+              <Text style={[styles.featureDesc, { color: colors.text3 }]}>{t(f.descKey)}</Text>
             </View>
           </View>
         ))}
 
         {/* CTA */}
         <View style={[styles.cta, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Text style={[styles.ctaTitle, { color: colors.text1 }]}>Start tracking today.</Text>
+          <Text style={[styles.ctaTitle, { color: colors.text1 }]}>{t('landingCtaTitle')}</Text>
           <TouchableOpacity
             onPress={() => navigation.navigate('Register')}
             style={[styles.primaryBtn, { backgroundColor: colors.brand }]}
@@ -82,8 +88,9 @@ export default function LandingScreen({ navigation }) {
           >
             <Text style={styles.primaryBtnText}>{t('landingGetStarted')}</Text>
           </TouchableOpacity>
-          <Text style={{ color: colors.text3, fontSize: 12, marginTop: 8 }}>Free forever · No credit card</Text>
+          <Text style={{ color: colors.text3, fontSize: 12, marginTop: 8 }}>{t('landingCtaSub')}</Text>
         </View>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -92,7 +99,9 @@ export default function LandingScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { paddingHorizontal: 20, paddingBottom: 40 },
   topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, marginBottom: 40 },
-  logo: { fontSize: 28, fontWeight: '700' },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  logoImg: { width: 32, height: 32, borderRadius: 8 },
+  brandName: { fontSize: 20, fontWeight: '800', letterSpacing: -0.5 },
   iconBtn: { width: 36, height: 36, borderRadius: 8, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
   hero: { alignItems: 'center', marginBottom: 40 },
   tag: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 20 },
