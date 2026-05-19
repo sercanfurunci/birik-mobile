@@ -55,6 +55,8 @@ export default function TransactionsScreen({ navigation }) {
   const [filterCat, setFilterCat] = useState('all');
   const [sortBy, setSortBy] = useState('dateDesc');
   const [showFilters, setShowFilters] = useState(false);
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   // Import state
   const [showImportModal, setShowImportModal] = useState(false);
@@ -90,7 +92,7 @@ export default function TransactionsScreen({ navigation }) {
     setEditAmount(String(tx.amount));
     setEditType(tx.type);
     setEditCategory(tx.category);
-    setEditDate(tx.date || todayLocalISO());
+    setEditDate((tx.date || todayLocalISO()).slice(0, 10));
   };
 
   const handleSaveEdit = async () => {
@@ -108,16 +110,22 @@ export default function TransactionsScreen({ navigation }) {
   };
 
   const handleDelete = (tx) => {
-    Alert.alert(t('deleteTransaction'), `${t('deleteConfirmLine1')} "${tx.description || t(tx.category)}"?`, [
-      { text: t('cancelBtn'), style: 'cancel' },
-      {
-        text: t('deleteBtn'), style: 'destructive',
-        onPress: async () => {
-          const ok = await deleteTransaction(tx.id);
-          if (ok) showToast(t('toastTxDeleted'));
+    const name = tx.description || t(tx.category);
+    const amtStr = `${symbol}${fmt(tx.amount)}`;
+    Alert.alert(
+      t('deleteTransaction'),
+      `"${name}" — ${amtStr}`,
+      [
+        { text: t('cancelBtn'), style: 'cancel' },
+        {
+          text: t('deleteBtn'), style: 'destructive',
+          onPress: async () => {
+            const ok = await deleteTransaction(tx.id);
+            if (ok) { setEditingTx(null); showToast(t('toastTxDeleted')); }
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   // ── Statement import ──────────────────────────────────────────────────────────
@@ -206,6 +214,8 @@ export default function TransactionsScreen({ navigation }) {
     if (search.trim()) list = list.filter(tx => (tx.description || '').toLowerCase().includes(search.toLowerCase()));
     if (filterType !== 'all') list = list.filter(tx => tx.type === filterType);
     if (filterCat !== 'all') list = list.filter(tx => tx.category === filterCat);
+    if (dateFrom) list = list.filter(tx => tx.date?.slice(0, 10) >= dateFrom);
+    if (dateTo) list = list.filter(tx => tx.date?.slice(0, 10) <= dateTo);
     if (sortBy === 'dateDesc') list.sort((a, b) => new Date(b.date) - new Date(a.date) || b.id - a.id);
     else if (sortBy === 'dateAsc') list.sort((a, b) => new Date(a.date) - new Date(b.date) || a.id - b.id);
     else if (sortBy === 'amountDesc') list.sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount));
@@ -261,7 +271,7 @@ export default function TransactionsScreen({ navigation }) {
       {/* Filter panel */}
       {showFilters && (
         <View style={[styles.filterPanel, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-          <View style={{ flexDirection: 'row', gap: 10 }}>
+          <View style={{ flexDirection: 'row', gap: 10, marginBottom: 10 }}>
             <Dropdown
               style={{ flex: 1 }}
               label={t('type')}
@@ -285,6 +295,42 @@ export default function TransactionsScreen({ navigation }) {
               ]}
             />
           </View>
+          <Dropdown
+            style={{ marginBottom: 10 }}
+            label={t('sortBy')}
+            value={sortBy}
+            onChange={setSortBy}
+            options={[
+              { value: 'dateDesc', label: t('sortDateDesc') },
+              { value: 'dateAsc', label: t('sortDateAsc') },
+              { value: 'amountDesc', label: t('sortAmountDesc') },
+              { value: 'amountAsc', label: t('sortAmountAsc') },
+            ]}
+          />
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.fieldLabel, { color: colors.text3, marginBottom: 6 }]}>{t('dateFrom')}</Text>
+              <TextInput
+                value={dateFrom}
+                onChangeText={setDateFrom}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor={colors.text3}
+                style={[styles.dateInput, { color: colors.text1, backgroundColor: colors.bg, borderColor: colors.border }]}
+                autoCapitalize="none"
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.fieldLabel, { color: colors.text3, marginBottom: 6 }]}>{t('dateTo')}</Text>
+              <TextInput
+                value={dateTo}
+                onChangeText={setDateTo}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor={colors.text3}
+                style={[styles.dateInput, { color: colors.text1, backgroundColor: colors.bg, borderColor: colors.border }]}
+                autoCapitalize="none"
+              />
+            </View>
+          </View>
         </View>
       )}
 
@@ -297,7 +343,7 @@ export default function TransactionsScreen({ navigation }) {
           </View>
         ) : (
           filtered.map((tx, i) => (
-            <TouchableOpacity key={tx.id} onLongPress={() => handleDelete(tx)} activeOpacity={0.85}>
+            <TouchableOpacity key={tx.id} onPress={() => openEdit(tx)} onLongPress={() => handleDelete(tx)} activeOpacity={0.85}>
               <View style={[styles.txCard, { backgroundColor: colors.surface, borderColor: colors.border }, i > 0 && { marginTop: 8 }]}>
                 <View style={[styles.txIcon, { backgroundColor: `${getCatColor(tx.category, tx.type)}18` }]}>
                   <View style={[styles.txIconDot, { backgroundColor: getCatColor(tx.category, tx.type) }]} />
@@ -310,14 +356,9 @@ export default function TransactionsScreen({ navigation }) {
                     {formatDate(tx.date)} · {t(tx.category)}
                   </Text>
                 </View>
-                <View style={{ alignItems: 'flex-end', gap: 4 }}>
-                  <Text style={[styles.txAmt, { color: tx.type === 'income' ? colors.green : colors.red }]}>
-                    {tx.type === 'income' ? '+' : '-'}{symbol}{fmt(tx.amount)}
-                  </Text>
-                  <TouchableOpacity onPress={() => openEdit(tx)}>
-                    <Text style={{ color: colors.text3, fontSize: 11 }}>{t('editBtn')}</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.txAmt, { color: tx.type === 'income' ? colors.green : colors.red }]}>
+                  {tx.type === 'income' ? '+' : '-'}{symbol}{fmt(tx.amount)}
+                </Text>
               </View>
             </TouchableOpacity>
           ))
@@ -480,14 +521,9 @@ export default function TransactionsScreen({ navigation }) {
             <ScrollView contentContainerStyle={styles.modal} keyboardShouldPersistTaps="handled">
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, { color: colors.text1 }]}>{t('editBtn')}</Text>
-                <View style={{ flexDirection: 'row', gap: 12 }}>
-                  <TouchableOpacity onPress={() => editingTx && handleDelete(editingTx)}>
-                    <Text style={{ color: colors.red, fontSize: 14, fontWeight: '600' }}>{t('deleteBtn')}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => setEditingTx(null)}>
-                    <Text style={{ color: colors.text3, fontSize: 20 }}>✕</Text>
-                  </TouchableOpacity>
-                </View>
+                <TouchableOpacity onPress={() => setEditingTx(null)}>
+                  <Text style={{ color: colors.text3, fontSize: 20 }}>✕</Text>
+                </TouchableOpacity>
               </View>
 
               <Input label={t('description')} value={editDesc} onChangeText={setEditDesc} placeholder={t('descriptionPlaceholder')} style={{ marginBottom: 16 }} />
@@ -517,6 +553,12 @@ export default function TransactionsScreen({ navigation }) {
               <Input label={t('date')} value={editDate} onChangeText={setEditDate} placeholder="YYYY-MM-DD" autoCapitalize="none" style={{ marginBottom: 24 }} />
 
               <Button title={saving ? t('savingBtn') : t('saveBtn')} onPress={handleSaveEdit} loading={saving} />
+              <TouchableOpacity
+                style={{ marginTop: 12, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: colors.red, alignItems: 'center' }}
+                onPress={() => editingTx && handleDelete(editingTx)}
+              >
+                <Text style={{ color: colors.red, fontWeight: '600', fontSize: 14 }}>{t('deleteBtn')}</Text>
+              </TouchableOpacity>
             </ScrollView>
           </KeyboardAvoidingView>
         </View>
@@ -551,4 +593,5 @@ const styles = StyleSheet.create({
   toggleBtn: { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
   catChip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1 },
   importOption: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: 16, borderWidth: 1 },
+  dateInput: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9, fontSize: 13 },
 });
