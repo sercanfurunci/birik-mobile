@@ -7,6 +7,7 @@ import { useToast } from '../../context/ToastContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
 import { API, authFetch, queuedAuthFetch } from '../../utils/api';
+import { notifyGoalProgress } from '../../utils/notifications';
 import { fmt } from '../../utils/format';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
@@ -80,6 +81,10 @@ export default function GoalsScreen() {
         setGoals(prev => editingGoal ? prev.map(g => g.id === editingGoal.id ? data : g) : [...prev, data]);
         showToast(t('toastGoalSaved'));
         setShowModal(false);
+        const target = parseFloat(data.target_amount) || 0;
+        const saved = parseFloat(data.saved_amount) || 0;
+        const pct = target > 0 ? Math.round((saved / target) * 100) : 0;
+        notifyGoalProgress(data.name, data.id, pct).catch(() => {});
       }
     } finally {
       setSaving(false);

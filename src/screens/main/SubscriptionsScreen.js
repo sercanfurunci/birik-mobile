@@ -14,7 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API, authFetch, queuedAuthFetch } from '../../utils/api';
 import { scheduleSubscriptionReminders } from '../../utils/notifications';
 import { fmt } from '../../utils/format';
-import { todayLocalISO, parseLocalDate } from '../../utils/dateUtils';
+import { todayLocalISO, parseLocalDate, advanceToNextBilling } from '../../utils/dateUtils';
 import { CURRENCIES } from '../../constants/currencies';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
@@ -85,19 +85,6 @@ function monthlyEquivalent(amount, cycle) {
   return amount;
 }
 
-function advanceToNextBilling(dateStr, cycle) {
-  if (!dateStr) return null;
-  const d = parseLocalDate(dateStr) || new Date(dateStr);
-  if (!d) return null;
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const result = new Date(d);
-  while (result < today) {
-    if (cycle === 'weekly') result.setDate(result.getDate() + 7);
-    else if (cycle === 'yearly') result.setFullYear(result.getFullYear() + 1);
-    else result.setMonth(result.getMonth() + 1);
-  }
-  return result;
-}
 
 function periodsActive(startedAt, cycle) {
   if (!startedAt) return 1;
