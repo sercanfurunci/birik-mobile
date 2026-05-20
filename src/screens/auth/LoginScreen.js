@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, StatusBar } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, StatusBar, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { useTheme } from '../../context/ThemeContext';
@@ -56,7 +56,7 @@ export default function LoginScreen({ navigation }) {
 
           {/* Brand */}
           <View style={styles.brand}>
-            <Text style={[styles.brandIcon, { color: colors.brand }]}>⬡</Text>
+            <Image source={require('../../../assets/birik-icon.png')} style={styles.brandIcon} />
             <Text style={[styles.brandName, { color: colors.text1 }]}>{t('appName')}</Text>
             <Text style={[styles.brandSub, { color: colors.text3 }]}>{t('appSubtitle')}</Text>
           </View>
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   container: { paddingHorizontal: 20, paddingBottom: 40, paddingTop: 8 },
   backBtn: { marginBottom: 24 },
   brand: { alignItems: 'center', marginBottom: 32 },
-  brandIcon: { fontSize: 40, marginBottom: 8 },
+  brandIcon: { width: 56, height: 56, borderRadius: 14, marginBottom: 8 },
   brandName: { fontSize: 24, fontWeight: '700', letterSpacing: -0.5 },
   brandSub: { fontSize: 14, marginTop: 4 },
   card: { padding: 24, borderRadius: 18, borderWidth: 1, marginBottom: 20 },

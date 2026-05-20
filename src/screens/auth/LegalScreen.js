@@ -7,93 +7,111 @@ const CONTENT = {
   terms: {
     en: {
       title: 'Terms of Service',
-      updated: 'Last updated: May 2026',
+      updated: 'Last updated: May 10, 2026',
+      intro: 'These Terms of Service govern your use of Birik ("Service"), operated by Sercan Furunci ("we", "us"). By creating an account you agree to these terms.',
       sections: [
         {
-          heading: '1. Acceptance of Terms',
-          body: 'By creating an account or using Birik, you agree to these Terms of Service. If you do not agree, please do not use the app.',
+          heading: '1. Eligibility',
+          body: 'You must be at least 13 years old to use Birik. By registering, you confirm that you meet this requirement.',
         },
         {
-          heading: '2. Description of Service',
-          body: 'Birik is a personal finance management application that allows you to track income, expenses, subscriptions, and savings goals. The service is provided free of charge.',
+          heading: '2. Your Account',
+          body: 'You are responsible for keeping your password secure and for all activity that occurs under your account.\n\nYou must provide accurate information when registering. Do not impersonate others or create accounts on their behalf without permission.\n\nNotify us immediately if you suspect unauthorized access to your account.',
         },
         {
-          heading: '3. User Accounts',
-          body: 'You are responsible for maintaining the confidentiality of your account credentials. You agree to provide accurate information and to notify us immediately of any unauthorized use of your account.',
+          heading: '3. Acceptable Use',
+          body: 'You may use Birik only for lawful personal finance tracking. You agree not to:\n\n• Attempt to reverse-engineer, hack, or disrupt the Service or its infrastructure.\n• Upload malicious files, scripts, or content designed to harm other users or our systems.\n• Use the Service to store or process financial data of third parties without their consent.\n• Circumvent rate limits, authentication, or any other security measure.',
         },
         {
-          heading: '4. Acceptable Use',
-          body: 'You agree not to misuse the service, attempt to access accounts of other users, reverse-engineer any part of the app, or use the service for any unlawful purpose.',
+          heading: '4. Data You Enter',
+          body: 'You retain ownership of all financial data you enter into Birik. We do not claim any rights over your transactions, budgets, or goals.\n\nYou grant us a limited license to store and process your data solely to provide the Service to you.',
         },
         {
-          heading: '5. Data and Privacy',
-          body: 'Your financial data is stored securely. We do not sell your personal data to third parties. Please review our Privacy Policy for full details on how we handle your data.',
+          heading: '5. AI Statement Import',
+          body: 'The AI Statement Import feature sends your uploaded bank statements to Anthropic\'s Claude API for one-time extraction. Extracted data is returned to you and stored in your account. Raw files are not retained on our servers.\n\nReview extracted transactions before saving — AI extraction may occasionally misread amounts or categories.',
         },
         {
-          heading: '6. Disclaimer of Warranties',
-          body: 'Birik is provided "as is" without warranties of any kind. We do not guarantee uninterrupted or error-free operation. The app is not a licensed financial advisor and does not provide financial advice.',
+          heading: '6. Subscription Reminders & Emails',
+          body: 'By registering, you consent to receiving transactional emails from Birik, including account verification, password reset, and optional subscription bill reminders you configure.\n\nYou can disable bill reminder emails at any time by removing the reminder setting from each subscription inside the app.',
         },
         {
-          heading: '7. Limitation of Liability',
-          body: 'To the fullest extent permitted by law, Birik and its developers shall not be liable for any indirect, incidental, or consequential damages arising from your use of the service.',
+          heading: '7. Service Availability',
+          body: 'We aim to keep Birik available at all times but do not guarantee uninterrupted access. We may perform maintenance, apply updates, or temporarily suspend the Service without prior notice.',
         },
         {
-          heading: '8. Account Deletion',
-          body: 'You may delete your account at any time from the Profile screen. Upon deletion, all your data will be permanently removed from our servers.',
+          heading: '8. Disclaimer of Warranties',
+          body: 'Birik is provided "as is" without warranties of any kind. We are not financial advisors. Nothing in the Service constitutes financial, tax, or investment advice.\n\nWe are not liable for decisions you make based on data displayed in the app.',
         },
         {
-          heading: '9. Changes to Terms',
-          body: 'We may update these terms from time to time. Continued use of the app after changes constitutes acceptance of the new terms.',
+          heading: '9. Limitation of Liability',
+          body: 'To the maximum extent permitted by law, we are not liable for any indirect, incidental, or consequential damages arising from your use of the Service, including data loss.',
         },
         {
-          heading: '10. Contact',
-          body: 'For any questions about these terms, please contact us through the app or at our support channels.',
+          heading: '10. Termination',
+          body: 'You may delete your account at any time from Profile → Danger Zone → Delete Account. All your data will be permanently removed.\n\nWe reserve the right to suspend or terminate accounts that violate these terms.',
+        },
+        {
+          heading: '11. Changes to These Terms',
+          body: 'We may update these terms. The "Last updated" date at the top reflects the latest revision. Continued use of the Service after changes constitutes acceptance of the new terms.',
+        },
+        {
+          heading: '12. Contact',
+          body: 'Questions about these terms: support@furunci.tech',
         },
       ],
     },
     tr: {
       title: 'Kullanım Koşulları',
-      updated: 'Son güncelleme: Mayıs 2026',
+      updated: 'Son güncelleme: 10 Mayıs 2026',
+      intro: 'Bu Kullanım Koşulları, Sercan Furunci ("biz", "bizim") tarafından işletilen Birik\'yi ("Hizmet") kullanımınızı düzenler. Hesap oluşturarak bu koşulları kabul etmiş sayılırsınız.',
       sections: [
         {
-          heading: '1. Koşulların Kabulü',
-          body: "Birik; gelir, gider, abonelik ve birikim hedeflerini takip etmenizi sağlayan kişisel finans yönetimi uygulamasıdır. Hizmet ücretsiz olarak sunulmaktadır.",
+          heading: '1. Uygunluk',
+          body: "Birik'yi kullanabilmek için en az 13 yaşında olmanız gerekir. Kayıt olarak bu şartı karşıladığınızı onaylamış olursunuz.",
         },
         {
-          heading: '2. Hizmetin Tanımı',
-          body: 'Birik; gelir, gider, abonelik ve birikim hedeflerini takip etmenizi sağlayan kişisel finans yönetimi uygulamasıdır. Hizmet ücretsiz olarak sunulmaktadır.',
+          heading: '2. Hesabınız',
+          body: 'Şifrenizi güvende tutmaktan ve hesabınızda gerçekleşen tüm etkinlikten siz sorumlusunuz.\n\nKayıt olurken doğru bilgi vermeniz zorunludur. Başkalarının kimliğine bürünmeyin veya izinleri olmadan adlarına hesap oluşturmayın.\n\nHesabınıza yetkisiz erişim şüphesi duyarsanız bizi hemen bilgilendirin.',
         },
         {
-          heading: '3. Kullanıcı Hesapları',
-          body: 'Hesap bilgilerinizin gizliliğini korumak sizin sorumluluğunuzdadır. Doğru bilgi sağlamayı ve hesabınıza yetkisiz erişim durumunda bizi derhal bilgilendirmeyi kabul edersiniz.',
+          heading: '3. Kabul Edilebilir Kullanım',
+          body: "Birik'yi yalnızca yasal kişisel finans takibi için kullanabilirsiniz. Aşağıdakileri yapmamayı kabul edersiniz:\n\n• Hizmeti veya altyapısını tersine mühendislik, hackleme veya kesintiye uğratma girişiminde bulunmak.\n• Diğer kullanıcılara veya sistemlerimize zarar vermek amacıyla kötü amaçlı dosya, komut dosyası veya içerik yüklemek.\n• Üçüncü kişilerin finansal verilerini rızaları olmadan işlemek için Hizmeti kullanmak.\n• İstek sınırlarını, kimlik doğrulamayı veya diğer güvenlik önlemlerini aşmaya çalışmak.",
         },
         {
-          heading: '4. Kabul Edilebilir Kullanım',
-          body: 'Hizmeti kötüye kullanmamayı, diğer kullanıcıların hesaplarına erişmeye çalışmamayı, uygulamayı tersine mühendislik yöntemiyle incelememeyI ve yasadışı amaçlarla kullanmamayı kabul edersiniz.',
+          heading: '4. Girdiğiniz Veriler',
+          body: "Birik'ye girdiğiniz tüm finansal verilerin mülkiyeti size aittir. İşlemleriniz, bütçeleriniz veya hedefleriniz üzerinde herhangi bir hak talep etmiyoruz.\n\nSize Hizmeti sunmak amacıyla verilerinizi depolamak ve işlemek için bize sınırlı bir lisans vermiş olursunuz.",
         },
         {
-          heading: '5. Veri ve Gizlilik',
-          body: 'Finansal verileriniz güvenli biçimde saklanır. Kişisel verilerinizi üçüncü taraflara satmıyoruz. Verilerinizi nasıl işlediğimiz hakkında ayrıntılı bilgi için Gizlilik Politikamızı inceleyin.',
+          heading: '5. AI Ekstre İçe Aktarma',
+          body: "AI Ekstre İçe Aktarma özelliği, yüklediğiniz banka ekstrelerini tek seferlik çıkarım için Anthropic'in Claude API'sine gönderir. Çıkarılan veriler size döndürülür ve hesabınızda saklanır. Ham dosyalar sunucularımızda tutulmaz.\n\nKaydetmeden önce çıkarılan işlemleri gözden geçirin; AI çıkarımı zaman zaman tutarları veya kategorileri yanlış okuyabilir.",
         },
         {
-          heading: '6. Garanti Reddi',
-          body: 'Birik, herhangi bir garanti olmaksızın "olduğu gibi" sunulmaktadır. Kesintisiz veya hatasız çalışmayı garanti etmiyoruz. Uygulama lisanslı bir finansal danışman değildir ve finansal tavsiye sunmaz.',
+          heading: '6. Abonelik Hatırlatıcıları ve E-postalar',
+          body: "Kayıt olarak Birik'dan işlem e-postaları almayı kabul etmiş olursunuz; bunlar arasında hesap doğrulama, şifre sıfırlama ve uygulama içinde yapılandırdığınız isteğe bağlı abonelik fatura hatırlatıcıları yer alır.\n\nFatura hatırlatıcısı e-postalarını, uygulama içinden ilgili aboneliğin hatırlatıcı ayarını kaldırarak istediğiniz zaman devre dışı bırakabilirsiniz.",
         },
         {
-          heading: '7. Sorumluluğun Sınırlandırılması',
-          body: 'Yasaların izin verdiği azami ölçüde, Birik ve geliştiricileri, hizmetin kullanımından kaynaklanabilecek dolaylı veya arızi zararlardan sorumlu tutulamaz.',
+          heading: '7. Hizmet Erişilebilirliği',
+          body: "Birik'yi her zaman erişilebilir tutmayı hedefliyoruz ancak kesintisiz erişimi garanti etmiyoruz. Önceden bildirimde bulunmaksızın bakım yapabilir, güncellemeler uygulayabilir veya Hizmeti geçici olarak askıya alabiliriz.",
         },
         {
-          heading: '8. Hesap Silme',
-          body: 'Hesabınızı istediğiniz zaman Profil ekranından silebilirsiniz. Hesap silme işleminin ardından tüm verileriniz sunucularımızdan kalıcı olarak kaldırılır.',
+          heading: '8. Garanti Reddi',
+          body: 'Birik, herhangi bir garanti olmaksızın "olduğu gibi" sunulmaktadır. Finansal danışman değiliz. Hizmet içindeki hiçbir şey finansal, vergi veya yatırım tavsiyesi niteliği taşımaz.\n\nUygulamada gösterilen verilere dayanarak verdiğiniz kararlardan sorumlu değiliz.',
         },
         {
-          heading: '9. Değişiklikler',
-          body: 'Bu koşulları zaman zaman güncelleyebiliriz. Değişikliklerden sonra uygulamayı kullanmaya devam etmeniz, yeni koşulları kabul ettiğiniz anlamına gelir.',
+          heading: '9. Sorumluluk Sınırlaması',
+          body: 'Yasaların izin verdiği azami ölçüde, veri kaybı dahil olmak üzere Hizmeti kullanımınızdan kaynaklanan dolaylı, arızi veya sonuçsal zararlardan sorumlu değiliz.',
         },
         {
-          heading: '10. İletişim',
-          body: 'Bu koşullar hakkında sorularınız için uygulama üzerinden veya destek kanallarımız aracılığıyla bize ulaşabilirsiniz.',
+          heading: '10. Hesap Sonlandırma',
+          body: 'Hesabınızı istediğiniz zaman Profil → Tehlikeli Bölge → Hesabı Sil yolundan silebilirsiniz. Tüm verileriniz kalıcı olarak kaldırılacaktır.\n\nBu koşulları ihlal eden hesapları askıya alma veya sonlandırma hakkımızı saklı tutarız.',
+        },
+        {
+          heading: '11. Koşullardaki Değişiklikler',
+          body: 'Bu koşulları güncelleyebiliriz. Üstteki "Son güncelleme" tarihi en son revizyonu gösterir. Değişikliklerden sonra Hizmeti kullanmaya devam etmek yeni koşulları kabul ettiğiniz anlamına gelir.',
+        },
+        {
+          heading: '12. İletişim',
+          body: 'Bu koşullara ilişkin sorularınız için: support@furunci.tech',
         },
       ],
     },
@@ -101,101 +119,95 @@ const CONTENT = {
   privacy: {
     en: {
       title: 'Privacy Policy',
-      updated: 'Last updated: May 2026',
+      updated: 'Last updated: May 8, 2026',
+      intro: 'Birik ("we", "us", "our") respects your privacy. This policy explains what data we collect, how we use it, and your rights.',
       sections: [
         {
-          heading: '1. Information We Collect',
-          body: 'We collect information you provide when creating an account (email or phone number) and the financial data you enter (transactions, budgets, goals, subscriptions). We do not collect payment card information.',
+          heading: '1. Data We Collect',
+          body: 'Account information: email address, optional phone number, password (stored as a one-way bcrypt hash — we never see your plain password), display name, and preferred currency.\n\nFinancial data you enter: transactions (amount, category, description, date, type), monthly budgets, and subscription records.\n\nBank statements you upload: PDFs or images submitted to the AI Statement Import feature are processed in memory and discarded after extraction. We do not store the raw files.\n\nTechnical data: IP address (used only for rate limiting and abuse prevention), and browser/device information sent automatically with each request.',
         },
         {
-          heading: '2. How We Use Your Information',
-          body: 'Your data is used solely to provide the Birik service — to display your financial summary, analytics, and enable app features. We do not use your data for advertising purposes.',
+          heading: '2. How We Use Your Data',
+          body: 'To provide the service: store and display your transactions, budgets, and subscriptions; send verification and password-reset emails; process statement imports.\n\nTo secure your account: rate-limit login attempts, detect abuse, and authenticate API requests with JWT tokens.\n\nWe do not sell your data, share it with advertisers, or use it for marketing.',
         },
         {
-          heading: '3. Data Storage and Security',
-          body: 'Your data is stored on secure servers with encryption in transit (HTTPS). We apply industry-standard security measures to protect your information.',
+          heading: '3. Third-Party Services',
+          body: 'Neon (PostgreSQL hosting): stores your account and financial data. Encrypted at rest and in transit.\n\nRailway: hosts the backend API. Receives requests but does not retain personal data beyond logs.\n\nVercel: hosts the web frontend. Sees only static assets and client requests, no database access.\n\nResend: sends transactional email (verification, password reset). Receives recipient email and message content.\n\nAnthropic Claude API: processes uploaded bank statements. Statement content is sent for one-time extraction; per Anthropic\'s policy, API inputs are not used to train models.\n\nFrankfurter (open exchange-rate API): we query daily exchange rates without sending any user data.\n\nGoogle Favicon API: fetches subscription brand icons by domain name. No user identity is sent.',
         },
         {
-          heading: '4. Data Sharing',
-          body: 'We do not sell, rent, or share your personal or financial data with third parties for marketing purposes. Data may be shared only when required by law.',
+          heading: '4. Data Retention',
+          body: 'Your data is retained for as long as your account is active. When you delete your account, all transactions, budgets, and subscriptions are removed immediately and permanently.\n\nServer logs (containing IP addresses) are retained for up to 30 days for security analysis.',
         },
         {
-          heading: '5. AI-Powered Features',
-          body: 'When you use the statement import feature, the uploaded image or PDF is sent to an AI service for transaction extraction. This data is processed only for this purpose and is not stored by the AI provider.',
+          heading: '5. Your Rights',
+          body: 'Access: You can view all of your data within the app.\n\nExport: You can export your transactions to CSV at any time.\n\nCorrection: You can edit any transaction, budget, or subscription directly in the app.\n\nDeletion: You can permanently delete your account inside the app — open Profile → Danger Zone → Delete Account. Your account, transactions, budgets, and subscriptions are removed immediately. If you prefer, you can also email us at the address below.\n\nIf you are in the EU, UK, or California, you also have rights under GDPR/UK GDPR/CCPA to request a copy or erasure of your data.',
         },
         {
-          heading: '6. Your Rights',
-          body: 'You have the right to access, correct, or delete your data at any time. You can delete your entire account and all associated data from the Profile screen.',
+          heading: '6. Cookies & Local Storage',
+          body: 'We use a JWT authentication token stored securely on your device to keep you signed in. We use no advertising or tracking cookies.\n\nYour dark/light mode and language preferences are also saved locally so they persist between sessions.',
         },
         {
-          heading: '7. Data Retention',
-          body: 'We retain your data as long as your account is active. When you delete your account, all data is permanently removed from our systems.',
+          heading: '7. Children',
+          body: 'Birik is not intended for users under 13. We do not knowingly collect data from children. If you believe a child has registered, contact us and we will delete the account.',
         },
         {
-          heading: '8. Cookies and Local Storage',
-          body: 'The app uses local device storage (AsyncStorage) to remember your preferences such as theme and language settings. No tracking cookies are used.',
+          heading: '8. Security',
+          body: 'Passwords are stored as bcrypt hashes. All traffic between your device and our servers uses HTTPS/TLS. Database connections are encrypted. We do our best to protect your data, but no system is 100% secure.',
         },
         {
-          heading: '9. Children\'s Privacy',
-          body: 'Birik is not intended for users under the age of 13. We do not knowingly collect data from children.',
+          heading: '9. Changes to This Policy',
+          body: 'We may update this policy. The "Last updated" date at the top reflects the latest revision. Material changes will be communicated via email or an in-app notice.',
         },
         {
-          heading: '10. Changes to This Policy',
-          body: 'We may update this Privacy Policy periodically. We will notify you of significant changes through the app.',
-        },
-        {
-          heading: '11. Contact',
-          body: 'For privacy-related questions or requests, please contact us through the app or our support channels.',
+          heading: '10. Contact',
+          body: 'Questions, requests, or complaints: privacy@furunci.tech',
         },
       ],
     },
     tr: {
       title: 'Gizlilik Politikası',
-      updated: 'Son güncelleme: Mayıs 2026',
+      updated: 'Son güncelleme: 8 Mayıs 2026',
+      intro: 'Birik ("biz", "bizim") gizliliğinize saygı duyar. Bu politika, hangi verileri topladığımızı, nasıl kullandığımızı ve haklarınızı açıklar.',
       sections: [
         {
-          heading: '1. Topladığımız Bilgiler',
-          body: 'Hesap oluştururken sağladığınız bilgileri (e-posta veya telefon numarası) ve girdiğiniz finansal verileri (işlemler, bütçeler, hedefler, abonelikler) toplarız. Ödeme kartı bilgisi toplamıyoruz.',
+          heading: '1. Topladığımız Veriler',
+          body: 'Hesap bilgileri: e-posta adresi, isteğe bağlı telefon numarası, şifre (tek yönlü bcrypt hash olarak saklanır — düz şifrenizi asla görmeyiz), görünen ad ve tercih edilen para birimi.\n\nGirdiğiniz finansal veriler: işlemler (tutar, kategori, açıklama, tarih, tür), aylık bütçeler ve abonelik kayıtları.\n\nYüklediğiniz banka ekstreleri: AI Ekstre İçe Aktarma özelliğine gönderilen PDF veya görseller bellekte işlenir ve çıkarımdan sonra silinir. Ham dosyaları saklamıyoruz.\n\nTeknik veriler: IP adresi (yalnızca hız sınırlama ve kötüye kullanımı engelleme için), tarayıcı/cihaz bilgileri (her istekte otomatik gönderilir).',
         },
         {
-          heading: '2. Bilgilerinizi Nasıl Kullanıyoruz',
-          body: 'Verileriniz yalnızca Birik hizmetini sunmak amacıyla kullanılır: finansal özetinizi göstermek, analiz sağlamak ve uygulama özelliklerini etkinleştirmek. Verilerinizi reklam amacıyla kullanmıyoruz.',
+          heading: '2. Verileri Nasıl Kullanıyoruz',
+          body: 'Hizmeti sağlamak için: işlemlerinizi, bütçelerinizi ve aboneliklerinizi saklayıp göstermek; doğrulama ve şifre sıfırlama e-postaları göndermek; ekstre içe aktarımlarını işlemek.\n\nHesabınızı güvende tutmak için: giriş denemelerini sınırlamak, kötüye kullanımı tespit etmek ve API isteklerini JWT token\'larıyla doğrulamak.\n\nVerilerinizi satmıyor, reklam verenlerle paylaşmıyor veya pazarlama için kullanmıyoruz.',
         },
         {
-          heading: '3. Veri Depolama ve Güvenlik',
-          body: 'Verileriniz, aktarım sırasında şifreleme (HTTPS) ile güvenli sunucularda saklanır. Bilgilerinizi korumak için endüstri standardı güvenlik önlemleri uyguluyoruz.',
+          heading: '3. Üçüncü Taraf Hizmetleri',
+          body: 'Neon (PostgreSQL barındırma): hesap ve finansal verilerinizi saklar. Hem bekleme hem aktarım sırasında şifrelidir.\n\nRailway: backend API\'yi barındırır. İstekleri alır ancak loglar dışında kişisel veri tutmaz.\n\nVercel: web frontend\'i barındırır. Yalnızca statik dosyaları ve istemci isteklerini görür; veritabanına erişimi yoktur.\n\nResend: işlem e-postaları gönderir (doğrulama, şifre sıfırlama). Alıcı e-postasını ve mesaj içeriğini alır.\n\nAnthropic Claude API: yüklenen banka ekstrelerini işler. Ekstre içeriği tek seferlik çıkarım için gönderilir; Anthropic\'in politikasına göre API girdileri model eğitiminde kullanılmaz.\n\nFrankfurter (açık döviz kuru API\'si): kullanıcı verisi göndermeden günlük döviz kurlarını sorgular.\n\nGoogle Favicon API: abonelik marka ikonlarını alan adına göre çeker. Kullanıcı kimliği gönderilmez.',
         },
         {
-          heading: '4. Veri Paylaşımı',
-          body: 'Kişisel veya finansal verilerinizi pazarlama amacıyla üçüncü taraflara satmıyor, kiralamıyor veya paylaşmıyoruz. Veriler yalnızca yasal zorunluluk halinde paylaşılabilir.',
+          heading: '4. Veri Saklama',
+          body: 'Verileriniz hesabınız aktif olduğu sürece saklanır. Hesabınızı sildiğinizde tüm işlemleriniz, bütçeleriniz ve abonelikleriniz anında ve kalıcı olarak kaldırılır.\n\nSunucu logları (IP adresleri içeren) güvenlik analizi için en fazla 30 gün saklanır.',
         },
         {
-          heading: '5. Yapay Zeka Destekli Özellikler',
-          body: 'Hesap özeti içe aktarma özelliğini kullandığınızda, yüklenen görüntü veya PDF işlem çıkarımı için bir yapay zeka hizmetine gönderilir. Bu veri yalnızca bu amaçla işlenir ve yapay zeka sağlayıcısı tarafından saklanmaz.',
+          heading: '5. Haklarınız',
+          body: 'Erişim: Tüm verilerinizi uygulama içinde görüntüleyebilirsiniz.\n\nDışa aktarma: İşlemlerinizi istediğiniz zaman CSV olarak dışa aktarabilirsiniz.\n\nDüzeltme: İşlem, bütçe veya aboneliği doğrudan uygulama içinde düzenleyebilirsiniz.\n\nSilme: Hesabınızı uygulama içinden kalıcı olarak silebilirsiniz — Profil → Tehlikeli Bölge → Hesabı Sil yolunu izleyin. Hesabınız, işlemleriniz, bütçeleriniz ve abonelikleriniz anında kaldırılır.\n\nAB, Birleşik Krallık veya California\'daysanız GDPR/UK GDPR/CCPA kapsamında verilerinizin bir kopyasını veya silinmesini talep etme haklarınız vardır.',
         },
         {
-          heading: '6. Haklarınız',
-          body: 'Verilerinize istediğiniz zaman erişme, düzeltme veya silme hakkına sahipsiniz. Hesabınızı ve tüm ilgili verileri Profil ekranından silebilirsiniz.',
+          heading: '6. Çerezler ve Yerel Depolama',
+          body: 'Sizi oturumda tutmak için cihazınızda güvenli biçimde saklanan bir JWT kimlik doğrulama token\'ı kullanırız. Reklam veya takip çerezi kullanmıyoruz.\n\nKaranlık/aydınlık mod ve dil tercihleriniz de oturumlar arasında korunmak üzere yerel olarak saklanır.',
         },
         {
-          heading: '7. Veri Saklama',
-          body: 'Hesabınız aktif olduğu sürece verilerinizi saklarız. Hesabınızı sildiğinizde tüm veriler sistemlerimizden kalıcı olarak kaldırılır.',
+          heading: '7. Çocuklar',
+          body: 'Birik 13 yaş altı kullanıcılar için tasarlanmamıştır. Çocuklardan bilerek veri toplamayız. Bir çocuğun kayıt olduğunu düşünüyorsanız bize ulaşın, hesabı sileriz.',
         },
         {
-          heading: '8. Çerezler ve Yerel Depolama',
-          body: 'Uygulama, tema ve dil tercihleri gibi ayarlarınızı hatırlamak için cihazın yerel depolama alanını (AsyncStorage) kullanır. İzleme çerezi kullanılmaz.',
+          heading: '8. Güvenlik',
+          body: 'Şifreler bcrypt hash olarak saklanır. Cihazınız ile sunucularımız arasındaki tüm trafik HTTPS/TLS kullanır. Veritabanı bağlantıları şifrelidir. Verilerinizi korumak için elimizden geleni yaparız ancak hiçbir sistem %100 güvenli değildir.',
         },
         {
-          heading: '9. Çocukların Gizliliği',
-          body: 'Birik, 13 yaşın altındaki kullanıcılara yönelik değildir. Çocuklardan bilerek veri toplamıyoruz.',
+          heading: '9. Bu Politikadaki Değişiklikler',
+          body: 'Bu politikayı güncelleyebiliriz. Üstteki "Son güncelleme" tarihi en son revizyonu gösterir. Önemli değişiklikler e-posta veya uygulama içi bildirim ile iletilecektir.',
         },
         {
-          heading: '10. Politika Değişiklikleri',
-          body: 'Bu Gizlilik Politikasını periyodik olarak güncelleyebiliriz. Önemli değişiklikler hakkında sizi uygulama üzerinden bilgilendireceğiz.',
-        },
-        {
-          heading: '11. İletişim',
-          body: 'Gizlilikle ilgili sorularınız veya talepleriniz için uygulama üzerinden ya da destek kanallarımız aracılığıyla bize ulaşabilirsiniz.',
+          heading: '10. İletişim',
+          body: 'Soru, talep veya şikayetler için: privacy@furunci.tech',
         },
       ],
     },
@@ -222,6 +234,9 @@ export default function LegalScreen({ navigation, route }) {
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <Text style={[styles.updated, { color: colors.text3 }]}>{content.updated}</Text>
+        {content.intro && (
+          <Text style={[styles.intro, { color: colors.text2 }]}>{content.intro}</Text>
+        )}
 
         {content.sections.map((sec, i) => (
           <View key={i} style={styles.section}>
@@ -242,7 +257,8 @@ const styles = StyleSheet.create({
   backBtn: { width: 32, alignItems: 'flex-start' },
   headerTitle: { fontSize: 16, fontWeight: '700' },
   scroll: { padding: 20, paddingBottom: 48 },
-  updated: { fontSize: 12, marginBottom: 24, fontStyle: 'italic' },
+  updated: { fontSize: 12, marginBottom: 12, fontStyle: 'italic' },
+  intro: { fontSize: 14, lineHeight: 22, marginBottom: 24 },
   section: { marginBottom: 20 },
   heading: { fontSize: 14, fontWeight: '700', marginBottom: 6 },
   body: { fontSize: 14, lineHeight: 22 },

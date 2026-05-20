@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, StatusBar } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, StatusBar, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { useTheme } from '../../context/ThemeContext';
@@ -45,6 +45,7 @@ export default function RegisterScreen({ navigation }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState('form'); // 'form' | 'done'
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const handleSubmit = async () => {
     setError('');
@@ -104,7 +105,7 @@ export default function RegisterScreen({ navigation }) {
           </TouchableOpacity>
 
           <View style={styles.brand}>
-            <Text style={[styles.brandIcon, { color: colors.brand }]}>⬡</Text>
+            <Image source={require('../../../assets/birik-icon.png')} style={styles.brandIcon} />
             <Text style={[styles.brandName, { color: colors.text1 }]}>{t('appName')}</Text>
             <Text style={[styles.brandSub, { color: colors.text3 }]}>{t('appSubtitle')}</Text>
           </View>
@@ -145,7 +146,20 @@ export default function RegisterScreen({ navigation }) {
               </View>
             )}
 
-            <Button title={loading ? t('creatingAccount') : t('createAccountBtn')} onPress={handleSubmit} loading={loading} style={{ marginTop: 16 }} />
+            <TouchableOpacity onPress={() => setTermsAccepted(v => !v)} style={styles.termsRow} activeOpacity={0.7}>
+              <View style={[styles.checkbox, { borderColor: termsAccepted ? colors.brand : colors.border, backgroundColor: termsAccepted ? colors.brand : 'transparent' }]}>
+                {termsAccepted && <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>✓</Text>}
+              </View>
+              <Text style={{ color: colors.text2, fontSize: 13, flex: 1, lineHeight: 18 }}>
+                {t('registerAgreePrefix')}{' '}
+                <Text style={{ color: colors.brand, textDecorationLine: 'underline' }} onPress={() => navigation.navigate('Legal', { type: 'terms' })}>{t('termsOfService')}</Text>
+                {' '}{t('registerAnd')}{' '}
+                <Text style={{ color: colors.brand, textDecorationLine: 'underline' }} onPress={() => navigation.navigate('Legal', { type: 'privacy' })}>{t('privacyPolicy')}</Text>
+                {' '}{t('registerAgreeAccept')}
+              </Text>
+            </TouchableOpacity>
+
+            <Button title={loading ? t('creatingAccount') : t('createAccountBtn')} onPress={handleSubmit} loading={loading} disabled={!termsAccepted} style={{ marginTop: 16, opacity: termsAccepted ? 1 : 0.4 }} />
           </View>
 
           <View style={styles.switchRow}>
@@ -155,16 +169,6 @@ export default function RegisterScreen({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.legalRow}>
-            <Text style={{ color: colors.text3, fontSize: 12 }}>{t('registerAgreeTerms')} </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Legal', { type: 'terms' })}>
-              <Text style={{ color: colors.text3, fontSize: 12, textDecorationLine: 'underline' }}>{t('termsOfService')}</Text>
-            </TouchableOpacity>
-            <Text style={{ color: colors.text3, fontSize: 12 }}> {t('registerAnd')} </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Legal', { type: 'privacy' })}>
-              <Text style={{ color: colors.text3, fontSize: 12, textDecorationLine: 'underline' }}>{t('privacyPolicy')}</Text>
-            </TouchableOpacity>
-          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -175,7 +179,7 @@ const styles = StyleSheet.create({
   container: { paddingHorizontal: 20, paddingBottom: 40, paddingTop: 8 },
   backBtn: { marginBottom: 24 },
   brand: { alignItems: 'center', marginBottom: 32 },
-  brandIcon: { fontSize: 40, marginBottom: 8 },
+  brandIcon: { width: 56, height: 56, borderRadius: 14, marginBottom: 8 },
   brandName: { fontSize: 24, fontWeight: '700', letterSpacing: -0.5 },
   brandSub: { fontSize: 14, marginTop: 4 },
   card: { padding: 24, borderRadius: 18, borderWidth: 1, marginBottom: 20 },
@@ -185,5 +189,6 @@ const styles = StyleSheet.create({
   toggleText: { fontSize: 13, fontWeight: '600' },
   errorBox: { padding: 12, borderRadius: 10, borderWidth: 1, marginTop: 8 },
   switchRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
-  legalRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap', marginTop: 16 },
+  termsRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginTop: 16 },
+  checkbox: { width: 20, height: 20, borderRadius: 5, borderWidth: 1.5, justifyContent: 'center', alignItems: 'center', marginTop: 1 },
 });
