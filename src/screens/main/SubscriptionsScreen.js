@@ -423,8 +423,8 @@ export default function SubscriptionsScreen() {
     setSubCycle(s.billing_cycle || 'monthly');
     setSubAmount(String(s.amount || ''));
     setSubCurrency(s.currency || userCurrency);
-    setSubStarted(s.started_at || todayLocalISO());
-    setSubNextBilling(s.next_billing_date || s.next_billing || '');
+    setSubStarted((s.started_at || todayLocalISO()).slice(0, 10));
+    setSubNextBilling((s.next_billing_date || s.next_billing || '').slice(0, 10));
     setSubNotes(s.notes || '');
     setAutoCharge(s.auto_charge || false);
     setReminderDays(s.reminder_days ?? null);
