@@ -1,10 +1,9 @@
 import { useRef, useEffect } from 'react';
 import { Animated, PanResponder, View } from 'react-native';
 
-const ACTION_W = 130; // total width of revealed actions (2 buttons)
-const SNAP_THRESHOLD = ACTION_W / 2;
-
-export default function SwipeableRow({ children, renderActions, onSwipeOpen }) {
+export default function SwipeableRow({ children, renderActions, onSwipeOpen, actionWidth = 72 }) {
+  const ACTION_W = actionWidth;
+  const SNAP_THRESHOLD = ACTION_W / 2;
   const translateX = useRef(new Animated.Value(0)).current;
   const currentX = useRef(0);
   const isOpen = useRef(false);
@@ -49,7 +48,7 @@ export default function SwipeableRow({ children, renderActions, onSwipeOpen }) {
   return (
     <View style={{ overflow: 'hidden' }}>
       {/* Action buttons (revealed behind) */}
-      <View style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: ACTION_W, flexDirection: 'row' }}>
+      <View style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: ACTION_W }}>
         {renderActions(close)}
       </View>
       {/* Row */}

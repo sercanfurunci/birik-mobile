@@ -346,28 +346,20 @@ export default function TransactionsScreen({ navigation }) {
           </View>
         ) : (
           filtered.map((tx, i) => (
+            <View key={tx.id} style={i > 0 && { marginTop: 8 }}>
             <SwipeableRow
-              key={tx.id}
+              actionWidth={72}
               renderActions={(close) => (
-                <>
-                  <TouchableOpacity
-                    onPress={() => { close(); openEdit(tx); }}
-                    style={[styles.swipeAction, { backgroundColor: colors.brand }]}
-                    activeOpacity={0.85}
-                  >
-                    <Ionicons name="pencil-outline" size={20} color="#fff" />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => { close(); handleDelete(tx); }}
-                    style={[styles.swipeAction, { backgroundColor: colors.red }]}
-                    activeOpacity={0.85}
-                  >
-                    <Ionicons name="trash-outline" size={20} color="#fff" />
-                  </TouchableOpacity>
-                </>
+                <TouchableOpacity
+                  onPress={() => { close(); handleDelete(tx); }}
+                  style={[styles.swipeAction, { backgroundColor: colors.red }]}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="trash-outline" size={22} color="#fff" />
+                </TouchableOpacity>
               )}
             >
-              <TouchableOpacity onPress={() => openEdit(tx)} activeOpacity={0.85} style={i > 0 && { marginTop: 8 }}>
+              <TouchableOpacity onPress={() => openEdit(tx)} activeOpacity={0.85}>
                 <View style={[styles.txCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                   <View style={[styles.txIcon, { backgroundColor: `${getCatColor(tx.category, tx.type)}18` }]}>
                     <View style={[styles.txIconDot, { backgroundColor: getCatColor(tx.category, tx.type) }]} />
@@ -386,6 +378,7 @@ export default function TransactionsScreen({ navigation }) {
                 </View>
               </TouchableOpacity>
             </SwipeableRow>
+            </View>
           ))
         )}
       </ScrollView>
@@ -610,7 +603,7 @@ const styles = StyleSheet.create({
   txDesc: { fontSize: 14, fontWeight: '500', marginBottom: 3 },
   txMeta: { fontSize: 12 },
   txAmt: { fontSize: 14, fontWeight: '700' },
-  swipeAction: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  swipeAction: { flex: 1, justifyContent: 'center', alignItems: 'center', borderRadius: 12 },
   modal: { padding: 20, paddingBottom: 40 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
   modalTitle: { fontSize: 18, fontWeight: '700' },
