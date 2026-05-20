@@ -354,6 +354,13 @@ const translations = {
     importConfirm: 'Import',
     importSuccess: 'transactions imported',
     importNoTxFound: 'No transactions found. Make sure the file is a clear bank statement.',
+    dashCustomize: 'Customize Dashboard',
+    dashSectionStats: 'Stats Cards',
+    dashSectionBreakdown: 'Expense Breakdown',
+    dashSectionDaily: 'Daily Balance',
+    dashSectionProjection: 'Month Projection',
+    dashSectionRecent: 'Recent Activity',
+    dashSectionGoals: 'Savings Goals',
   },
   tr: {
     appName: 'Birik',
@@ -687,6 +694,13 @@ const translations = {
     importConfirm: 'İçe Aktar',
     importSuccess: 'işlem içe aktarıldı',
     importNoTxFound: 'İşlem bulunamadı. Dosyanın net bir banka ekstresi olduğundan emin olun.',
+    dashCustomize: 'Kontrol Panelini Düzenle',
+    dashSectionStats: 'İstatistik Kartları',
+    dashSectionBreakdown: 'Gider Dağılımı',
+    dashSectionDaily: 'Günlük Bakiye',
+    dashSectionProjection: 'Ay Tahmini',
+    dashSectionRecent: 'Son İşlemler',
+    dashSectionGoals: 'Birikim Hedefleri',
   },
 };
 

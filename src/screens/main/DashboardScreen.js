@@ -1,7 +1,9 @@
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, StatusBar, Dimensions, Image } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, StatusBar, Dimensions, Image, Modal, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import { getDashboardPrefs, saveDashboardPrefs, DEFAULT_PREFS } from '../../utils/dashboardPrefs';
 import { useTheme } from '../../context/ThemeContext';
 import { useLang } from '../../context/LangContext';
 import { useAuth } from '../../context/AuthContext';
@@ -23,6 +25,18 @@ export default function DashboardScreen({ navigation }) {
   const [goals, setGoals] = useState([]);
   const [subscriptions, setSubscriptions] = useState([]);
   const [selectedDay, setSelectedDay] = useState(null);
+  const [prefs, setPrefs] = useState(DEFAULT_PREFS);
+  const [showPrefs, setShowPrefs] = useState(false);
+
+  useEffect(() => {
+    getDashboardPrefs().then(setPrefs);
+  }, []);
+
+  const togglePref = async (key) => {
+    const updated = { ...prefs, [key]: !prefs[key] };
+    setPrefs(updated);
+    await saveDashboardPrefs(updated);
+  };
 
   useFocusEffect(useCallback(() => {
     authFetch(`${API}/goals`).then(r => r.json()).then(d => Array.isArray(d) && setGoals(d)).catch(() => {});
@@ -169,6 +183,9 @@ export default function DashboardScreen({ navigation }) {
               </Text>
             )}
           </View>
+          <TouchableOpacity onPress={() => setShowPrefs(true)} style={[styles.prefBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Ionicons name="options-outline" size={18} color={colors.text2} />
+          </TouchableOpacity>
         </View>
 
         {/* Balance hero with counts */}
@@ -205,7 +222,7 @@ export default function DashboardScreen({ navigation }) {
         )}
 
         {/* This month stats */}
-        {thisMonthExp.length > 0 && (
+        {prefs.stats && thisMonthExp.length > 0 && (
           <>
             <Text style={[styles.sectionTitle, { color: colors.text3 }]}>{t('statThisMonth').toUpperCase()}</Text>
             <View style={styles.statsGrid}>
@@ -248,7 +265,7 @@ export default function DashboardScreen({ navigation }) {
         )}
 
         {/* Expense breakdown with % */}
-        {catData.length > 0 && (
+        {prefs.breakdown && catData.length > 0 && (
           <>
             <Text style={[styles.sectionTitle, { color: colors.text3 }]}>{t('expenseBreakdown').toUpperCase()}</Text>
             <Card style={[styles.listCard, { borderColor: colors.border }]}>
@@ -275,7 +292,7 @@ export default function DashboardScreen({ navigation }) {
         )}
 
         {/* Daily distribution chart */}
-        {hasDaily && (
+        {prefs.daily && hasDaily && (
           <>
             <Text style={[styles.sectionTitle, { color: colors.text3 }]}>{t('dailyDist').toUpperCase()}</Text>
             <Card style={[styles.chartCard, { borderColor: colors.border }]}>
@@ -348,7 +365,7 @@ export default function DashboardScreen({ navigation }) {
         )}
 
         {/* End of month projection */}
-        {projection && (
+        {prefs.projection && projection && (
           <>
             <Text style={[styles.sectionTitle, { color: colors.text3 }]}>{t('projTitle').toUpperCase()}</Text>
             <Card style={[styles.projCard, { borderColor: colors.border }]}>
@@ -397,7 +414,7 @@ export default function DashboardScreen({ navigation }) {
         )}
 
         {/* Recent activity with running balance */}
-        {recent.length > 0 && (
+        {prefs.recent && recent.length > 0 && (
           <>
             <Text style={[styles.sectionTitle, { color: colors.text3 }]}>{t('recentActivity').toUpperCase()}</Text>
             <Card style={[styles.listCard, { borderColor: colors.border }]}>
@@ -434,7 +451,7 @@ export default function DashboardScreen({ navigation }) {
         )}
 
         {/* Goals widget */}
-        {goals.length > 0 && (
+        {prefs.goals && goals.length > 0 && (
           <>
             <View style={[styles.sectionHeader]}>
               <Text style={[styles.sectionTitle, { color: colors.text3, marginBottom: 0 }]}>{t('dashGoals').toUpperCase()}</Text>
@@ -465,6 +482,33 @@ export default function DashboardScreen({ navigation }) {
           </>
         )}
       </ScrollView>
+
+      {/* Dashboard preferences modal */}
+      <Modal visible={showPrefs} transparent animationType="slide" onRequestClose={() => setShowPrefs(false)}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowPrefs(false)} />
+        <View style={[styles.prefsSheet, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={[styles.prefsHandle, { backgroundColor: colors.border }]} />
+          <Text style={[styles.prefsTitle, { color: colors.text1 }]}>{t('dashCustomize')}</Text>
+          {[
+            { key: 'stats', label: t('dashSectionStats') },
+            { key: 'breakdown', label: t('dashSectionBreakdown') },
+            { key: 'daily', label: t('dashSectionDaily') },
+            { key: 'projection', label: t('dashSectionProjection') },
+            { key: 'recent', label: t('dashSectionRecent') },
+            { key: 'goals', label: t('dashSectionGoals') },
+          ].map(({ key, label }, i, arr) => (
+            <View key={key} style={[styles.prefsRow, i < arr.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}>
+              <Text style={[styles.prefsLabel, { color: colors.text1 }]}>{label}</Text>
+              <Switch
+                value={prefs[key]}
+                onValueChange={() => togglePref(key)}
+                trackColor={{ false: colors.border, true: colors.brand }}
+                thumbColor="#fff"
+              />
+            </View>
+          ))}
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
