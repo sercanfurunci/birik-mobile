@@ -54,9 +54,9 @@ export default function BudgetsScreen() {
       const pct = Math.round((spent / limit) * 100);
       const label = t(b.category) || b.category;
       if (pct >= 100) {
-        notifyBudgetExceeded(label, spent, limit, symbol).catch(() => {});
+        notifyBudgetExceeded(label, spent, limit, symbol, b.category, thisMonthPrefix).catch(() => {});
       } else if (pct >= 80) {
-        notifyBudgetWarning(label, pct, symbol, spent, limit).catch(() => {});
+        notifyBudgetWarning(label, pct, symbol, spent, limit, b.category, thisMonthPrefix).catch(() => {});
       }
     });
   }, [transactions]);
