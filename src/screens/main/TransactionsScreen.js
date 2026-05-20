@@ -1,6 +1,6 @@
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, StatusBar,
-  TextInput, Modal, KeyboardAvoidingView, Platform, Alert, ActivityIndicator, FlatList,
+  TextInput, Modal, KeyboardAvoidingView, Platform, ActivityIndicator, FlatList, Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -53,6 +53,7 @@ export default function TransactionsScreen({ navigation }) {
   const [editCategory, setEditCategory] = useState('food');
   const [editDate, setEditDate] = useState('');
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   // Filter state
   const [search, setSearch] = useState('');
@@ -115,23 +116,15 @@ export default function TransactionsScreen({ navigation }) {
   };
 
   const handleDelete = (tx) => {
-    const name = tx.description || t(tx.category);
-    const amtStr = `${symbol}${fmt(tx.amount)}`;
-    Alert.alert(
-      t('deleteTransaction'),
-      `"${name}" — ${amtStr}`,
-      [
-        { text: t('cancelBtn'), style: 'cancel' },
-        {
-          text: t('deleteBtn'), style: 'destructive',
-          onPress: async () => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-            const ok = await deleteTransaction(tx.id);
-            if (ok) { setEditingTx(null); showToast(t('toastTxDeleted')); }
-          },
-        },
-      ],
-    );
+    setDeleteTarget(tx);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    const ok = await deleteTransaction(deleteTarget.id);
+    setDeleteTarget(null);
+    if (ok) { setEditingTx(null); showToast(t('toastTxDeleted')); }
   };
 
   // ── Statement import ──────────────────────────────────────────────────────────
@@ -406,7 +399,7 @@ export default function TransactionsScreen({ navigation }) {
                     <Text style={[styles.txAmt, { color: tx.type === 'income' ? colors.green : colors.red }]}>
                       {tx.type === 'income' ? '+' : '-'}{symbol}{fmt(tx.amount)}
                     </Text>
-                    <Text style={{ fontSize: 11, color: (balanceMap[tx.id] ?? 0) < 0 ? colors.red : colors.text3, marginTop: 2 }}>
+                    <Text style={{ fontSize: 11, color: colors.text3, marginTop: 2 }}>
                       {t('balance')}: {(balanceMap[tx.id] ?? 0) < 0 ? '-' : ''}{symbol}{fmt(Math.abs(balanceMap[tx.id] ?? 0))}
                     </Text>
                   </View>
@@ -624,6 +617,32 @@ export default function TransactionsScreen({ navigation }) {
           </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>
+
+      {/* Delete confirmation modal */}
+      <Modal visible={!!deleteTarget} transparent animationType="fade" onRequestClose={() => setDeleteTarget(null)}>
+        <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }} onPress={() => setDeleteTarget(null)}>
+          <Pressable onPress={() => {}} style={[styles.deleteSheet, { backgroundColor: colors.surface }]}>
+            <View style={[styles.dragHandle, { backgroundColor: colors.border, alignSelf: 'center', marginBottom: 20 }]} />
+            <View style={[styles.deleteIconWrap, { backgroundColor: `${colors.red}18` }]}>
+              <Ionicons name="trash-outline" size={28} color={colors.red} />
+            </View>
+            <Text style={[styles.deleteTitle, { color: colors.text1 }]}>{t('deleteTransaction')}</Text>
+            <Text style={[styles.deleteSub, { color: colors.text3 }]} numberOfLines={2}>
+              {deleteTarget?.description || t(deleteTarget?.category ?? '')}
+              {'\n'}
+              <Text style={{ fontWeight: '600', color: colors.text2 }}>
+                {deleteTarget?.type === 'income' ? '+' : '-'}{symbol}{fmt(deleteTarget?.amount)}
+              </Text>
+            </Text>
+            <TouchableOpacity style={[styles.deleteConfirmBtn, { backgroundColor: colors.red }]} onPress={confirmDelete}>
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>{t('deleteBtn')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.deleteCancelBtn, { borderColor: colors.border }]} onPress={() => setDeleteTarget(null)}>
+              <Text style={{ color: colors.text2, fontWeight: '600', fontSize: 15 }}>{t('cancelBtn')}</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -658,4 +677,10 @@ const styles = StyleSheet.create({
   importCard: { borderRadius: 16, borderWidth: 1, overflow: 'hidden', marginBottom: 8 },
   importRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16 },
   importIconWrap: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  deleteSheet: { borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 40 },
+  deleteIconWrap: { width: 60, height: 60, borderRadius: 18, justifyContent: 'center', alignItems: 'center', alignSelf: 'center', marginBottom: 16 },
+  deleteTitle: { fontSize: 18, fontWeight: '700', textAlign: 'center', marginBottom: 8 },
+  deleteSub: { fontSize: 14, textAlign: 'center', lineHeight: 22, marginBottom: 28 },
+  deleteConfirmBtn: { paddingVertical: 15, borderRadius: 14, alignItems: 'center', marginBottom: 10 },
+  deleteCancelBtn: { paddingVertical: 15, borderRadius: 14, alignItems: 'center', borderWidth: 1 },
 });

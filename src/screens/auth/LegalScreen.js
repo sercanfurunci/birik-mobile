@@ -119,7 +119,7 @@ const CONTENT = {
   privacy: {
     en: {
       title: 'Privacy Policy',
-      updated: 'Last updated: May 8, 2026',
+      updated: 'Last updated: May 20, 2026',
       intro: 'Birik ("we", "us", "our") respects your privacy. This policy explains what data we collect, how we use it, and your rights.',
       sections: [
         {
@@ -147,26 +147,30 @@ const CONTENT = {
           body: 'We use a JWT authentication token stored securely on your device to keep you signed in. We use no advertising or tracking cookies.\n\nYour dark/light mode and language preferences are also saved locally so they persist between sessions.',
         },
         {
-          heading: '7. Children',
+          heading: '7. Biometric Authentication',
+          body: 'If you enable biometric login (Face ID, Touch ID, or fingerprint), your biometric data is processed entirely by your device\'s operating system — iOS Secure Enclave or Android Biometric API. Birik never receives, stores, or transmits your fingerprint or face data.\n\nThe app only receives an "authenticated" or "denied" signal from the OS. Your biometric credentials never leave your device.',
+        },
+        {
+          heading: '8. Children',
           body: 'Birik is not intended for users under 13. We do not knowingly collect data from children. If you believe a child has registered, contact us and we will delete the account.',
         },
         {
-          heading: '8. Security',
+          heading: '9. Security',
           body: 'Passwords are stored as bcrypt hashes. All traffic between your device and our servers uses HTTPS/TLS. Database connections are encrypted. We do our best to protect your data, but no system is 100% secure.',
         },
         {
-          heading: '9. Changes to This Policy',
+          heading: '10. Changes to This Policy',
           body: 'We may update this policy. The "Last updated" date at the top reflects the latest revision. Material changes will be communicated via email or an in-app notice.',
         },
         {
-          heading: '10. Contact',
+          heading: '11. Contact',
           body: 'Questions, requests, or complaints: privacy@furunci.tech',
         },
       ],
     },
     tr: {
       title: 'Gizlilik Politikası',
-      updated: 'Son güncelleme: 8 Mayıs 2026',
+      updated: 'Son güncelleme: 20 Mayıs 2026',
       intro: 'Birik ("biz", "bizim") gizliliğinize saygı duyar. Bu politika, hangi verileri topladığımızı, nasıl kullandığımızı ve haklarınızı açıklar.',
       sections: [
         {
@@ -194,19 +198,23 @@ const CONTENT = {
           body: 'Sizi oturumda tutmak için cihazınızda güvenli biçimde saklanan bir JWT kimlik doğrulama token\'ı kullanırız. Reklam veya takip çerezi kullanmıyoruz.\n\nKaranlık/aydınlık mod ve dil tercihleriniz de oturumlar arasında korunmak üzere yerel olarak saklanır.',
         },
         {
-          heading: '7. Çocuklar',
+          heading: '7. Biyometrik Doğrulama',
+          body: 'Biyometrik girişi (Face ID, Touch ID veya parmak izi) etkinleştirirseniz biyometrik veriniz tamamen cihazınızın işletim sistemi — iOS Güvenli Şifreleme veya Android Biyometrik API — tarafından işlenir. Birik parmak izi veya yüz verinizi hiçbir zaman almaz, saklamaz veya iletmez.\n\nUygulama yalnızca işletim sisteminden "doğrulandı" veya "reddedildi" sinyali alır. Biyometrik kimlik bilgileri cihazınızdan hiç çıkmaz.',
+        },
+        {
+          heading: '8. Çocuklar',
           body: 'Birik 13 yaş altı kullanıcılar için tasarlanmamıştır. Çocuklardan bilerek veri toplamayız. Bir çocuğun kayıt olduğunu düşünüyorsanız bize ulaşın, hesabı sileriz.',
         },
         {
-          heading: '8. Güvenlik',
+          heading: '9. Güvenlik',
           body: 'Şifreler bcrypt hash olarak saklanır. Cihazınız ile sunucularımız arasındaki tüm trafik HTTPS/TLS kullanır. Veritabanı bağlantıları şifrelidir. Verilerinizi korumak için elimizden geleni yaparız ancak hiçbir sistem %100 güvenli değildir.',
         },
         {
-          heading: '9. Bu Politikadaki Değişiklikler',
+          heading: '10. Bu Politikadaki Değişiklikler',
           body: 'Bu politikayı güncelleyebiliriz. Üstteki "Son güncelleme" tarihi en son revizyonu gösterir. Önemli değişiklikler e-posta veya uygulama içi bildirim ile iletilecektir.',
         },
         {
-          heading: '10. İletişim',
+          heading: '11. İletişim',
           body: 'Soru, talep veya şikayetler için: privacy@furunci.tech',
         },
       ],

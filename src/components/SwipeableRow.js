@@ -77,12 +77,13 @@ export default function SwipeableRow({ children, onDelete }) {
 }
 
 const s = StyleSheet.create({
-  container: { overflow: 'hidden' },
+  container: { overflow: 'hidden', borderRadius: 12 },
   action: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: '#E04F4F',
     justifyContent: 'center',
     alignItems: 'flex-end',
     paddingRight: 26,
+    borderRadius: 12,
   },
 });
