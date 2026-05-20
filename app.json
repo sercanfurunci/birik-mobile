@@ -32,7 +32,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/birik-icon.png",
+          "icon": "./assets/notification-icon.png",
           "color": "#22c55e"
         }
       ],
