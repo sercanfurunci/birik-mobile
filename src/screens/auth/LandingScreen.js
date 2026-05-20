@@ -6,8 +6,10 @@ import { useLang } from '../../context/LangContext';
 const FEATURES = [
   { icon: '⚡', titleKey: 'landingFeature1Title', descKey: 'landingFeature1Desc' },
   { icon: '📊', titleKey: 'landingFeature2Title', descKey: 'landingFeature2Desc' },
-  { icon: '🎯', titleKey: 'landingFeature3Title', descKey: 'landingFeature3Desc' },
-  { icon: '🔄', titleKey: 'landingFeature4Title', descKey: 'landingFeature4Desc' },
+  { icon: '🌍', titleKey: 'landingFeature3Title', descKey: 'landingFeature3Desc' },
+  { icon: '🤖', titleKey: 'landingFeature4Title', descKey: 'landingFeature4Desc' },
+  { icon: '🔔', titleKey: 'landingFeature5Title', descKey: 'landingFeature5Desc' },
+  { icon: '🎯', titleKey: 'landingFeature6Title', descKey: 'landingFeature6Desc' },
 ];
 
 export default function LandingScreen({ navigation }) {

@@ -57,7 +57,7 @@ const CONTENT = {
       sections: [
         {
           heading: '1. Koşulların Kabulü',
-          body: 'Birik'te hesap oluşturarak veya uygulamayı kullanarak bu Kullanım Koşulları'nı kabul etmiş olursunuz. Kabul etmiyorsanız lütfen uygulamayı kullanmayın.',
+          body: "Birik; gelir, gider, abonelik ve birikim hedeflerini takip etmenizi sağlayan kişisel finans yönetimi uygulamasıdır. Hizmet ücretsiz olarak sunulmaktadır.",
         },
         {
           heading: '2. Hizmetin Tanımı',
