@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { View, AppState, StyleSheet, Animated } from 'react-native';
+import { AppState, Animated } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { LangProvider, useLang } from './src/context/LangContext';
@@ -13,18 +13,19 @@ import AppNavigator from './src/navigation/AppNavigator';
 import ToastContainer from './src/components/Toast';
 import OfflineBanner from './src/components/OfflineBanner';
 import Splash from './src/components/Splash';
+import BioLockScreen from './src/components/BioLockScreen';
 import { requestNotificationPermission } from './src/utils/notifications';
-import { getBiometricLockEnabled, authenticateWithBiometrics } from './src/utils/biometric';
+import { getBiometricLockEnabled } from './src/utils/biometric';
 
 const MIN_SPLASH_MS = 2600;
 
 function AppContent() {
   const { colors, isDark, themeChecked } = useTheme();
   const { langChecked } = useLang();
-  const { currentUser, authChecked, updateUser } = useAuth();
+  const { currentUser, authChecked, updateUser, handleLogout } = useAuth();
   const [minElapsed, setMinElapsed] = useState(false);
-  const [locked, setLocked] = useState(false);
-  const [bioReady, setBioReady] = useState(false);
+  const [bioLocked, setBioLocked] = useState(false);
+  const [bioChecked, setBioChecked] = useState(false);
   const appState = useRef(AppState.currentState);
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const prevIsDark = useRef(null);
@@ -49,34 +50,26 @@ function AppContent() {
     ]).start();
   }, [isDark]);
 
-  // Initial bio check on cold start (runs once after auth resolves)
+  // Determine initial bio lock state (runs once after auth resolves)
   useEffect(() => {
     if (!authChecked || bioCheckDone.current) return;
     bioCheckDone.current = true;
     (async () => {
       if (currentUser) {
         const enabled = await getBiometricLockEnabled();
-        if (enabled) {
-          setLocked(true);
-          const ok = await authenticateWithBiometrics();
-          if (ok) setLocked(false);
-        }
+        setBioLocked(enabled);
       }
-      setBioReady(true);
+      setBioChecked(true);
     })();
   }, [authChecked, currentUser]);
 
-  // Bio check on background → foreground
+  // Re-lock on background → foreground
   useEffect(() => {
     if (!currentUser) return;
     const sub = AppState.addEventListener('change', async nextState => {
       if (appState.current.match(/inactive|background/) && nextState === 'active') {
         const enabled = await getBiometricLockEnabled();
-        if (enabled) {
-          setLocked(true);
-          const ok = await authenticateWithBiometrics();
-          if (ok) setLocked(false);
-        }
+        if (enabled) setBioLocked(true);
       }
       appState.current = nextState;
     });
@@ -97,8 +90,18 @@ function AppContent() {
     } catch {}
   };
 
-  if (!authChecked || !themeChecked || !langChecked || !minElapsed || !bioReady) {
+  if (!authChecked || !themeChecked || !langChecked || !minElapsed || !bioChecked) {
     return <Splash />;
+  }
+
+  if (bioLocked && currentUser) {
+    return (
+      <BioLockScreen
+        user={currentUser}
+        onUnlock={() => setBioLocked(false)}
+        onSignOut={() => { handleLogout(); setBioLocked(false); }}
+      />
+    );
   }
 
   return (
@@ -111,24 +114,12 @@ function AppContent() {
           <OfflineBanner />
           <AppNavigator />
           <ToastContainer />
-          {locked && (
-            <View style={[appStyles.lockScreen, { backgroundColor: colors.bg }]}>
-              <View style={appStyles.lockIcon}>
-                <View style={[appStyles.lockDot, { backgroundColor: colors.brand }]} />
-              </View>
-            </View>
-          )}
         </Animated.View>
       </CategoriesProvider>
     </CurrencyProvider>
   );
 }
 
-const appStyles = StyleSheet.create({
-  lockScreen: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center', zIndex: 999 },
-  lockIcon: { width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(128,128,128,0.1)', justifyContent: 'center', alignItems: 'center' },
-  lockDot: { width: 24, height: 24, borderRadius: 12 },
-});
 
 export default function App() {
   return (
