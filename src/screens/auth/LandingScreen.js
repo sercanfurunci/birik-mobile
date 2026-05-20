@@ -24,7 +24,7 @@ export default function LandingScreen({ navigation }) {
         {/* Top bar */}
         <View style={styles.topBar}>
           <View style={styles.brandRow}>
-            <Image source={require('../../../assets/birik-icon.png')} style={styles.logoImg} />
+            <Image source={require('../../../assets/birik-icon-fg.png')} style={styles.logoImg} />
             <Text style={[styles.brandName, { color: colors.text1 }]}>{t('appName')}</Text>
           </View>
           <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   container: { paddingHorizontal: 20, paddingBottom: 40 },
   topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, marginBottom: 40 },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  logoImg: { width: 32, height: 32, borderRadius: 8 },
+  logoImg: { width: 48, height: 48 },
   brandName: { fontSize: 20, fontWeight: '800', letterSpacing: -0.5 },
   iconBtn: { width: 36, height: 36, borderRadius: 8, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
   hero: { alignItems: 'center', marginBottom: 40 },

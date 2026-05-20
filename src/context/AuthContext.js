@@ -1,9 +1,9 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import { API, authFetch, queuedAuthFetch } from '../utils/api';
 import { getQueue, removeFromQueue } from '../utils/offlineQueue';
 import { getBiometricLockEnabled } from '../utils/biometric';
+import { getToken, setToken, removeToken } from '../utils/tokenStorage';
 
 const AuthContext = createContext(null);
 
@@ -19,10 +19,13 @@ export function AuthProvider({ children }) {
     getQueue().then(q => setPendingCount(q.length));
     (async () => {
       try {
-        const token = await AsyncStorage.getItem('auth_token');
+        const token = await getToken();
         if (!token) return;
         const res = await authFetch(`${API}/auth/me`);
-        if (!res.ok) return;
+        if (!res.ok) {
+          await removeToken();
+          return;
+        }
         const data = await res.json();
         if (!data?.id) return;
         const user = {
@@ -56,7 +59,7 @@ export function AuthProvider({ children }) {
   }, [currentUser?.id]);
 
   const handleAuthSuccess = useCallback(async (user, token) => {
-    if (token) await AsyncStorage.setItem('auth_token', token);
+    if (token) await setToken(token);
     setPendingBioUser(null);
     setCurrentUser(user);
   }, []);
@@ -70,17 +73,11 @@ export function AuthProvider({ children }) {
 
   const handleLogout = useCallback(async () => {
     try { await authFetch(`${API}/auth/logout`, { method: 'POST' }); } catch {}
-    const bioEnabled = await getBiometricLockEnabled();
-    if (bioEnabled && currentUser) {
-      // Keep token so bio re-login works; show bio button immediately on Login screen
-      setPendingBioUser(currentUser);
-    } else {
-      await AsyncStorage.removeItem('auth_token');
-      setPendingBioUser(null);
-    }
+    await removeToken();
+    setPendingBioUser(null);
     setCurrentUser(null);
     setTransactions([]);
-  }, [currentUser]);
+  }, []);
 
   const updateUser = useCallback((updates) => {
     setCurrentUser(prev => ({ ...prev, ...updates }));

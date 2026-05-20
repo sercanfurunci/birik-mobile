@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { View, Text, TouchableOpacity, Modal, Platform, StyleSheet } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTheme } from '../context/ThemeContext';
+import { useLang } from '../context/LangContext';
 
 export default function DatePickerField({ label, value, onChange, placeholder, optional, style }) {
   const { colors } = useTheme();
+  const { t, lang } = useLang();
   const [show, setShow] = useState(false);
 
   const date = value ? new Date(value + 'T00:00:00') : new Date();
@@ -63,7 +65,7 @@ export default function DatePickerField({ label, value, onChange, placeholder, o
             <View style={[s.iosSheet, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={[s.iosHeader, { borderBottomColor: colors.border }]}>
                 <TouchableOpacity onPress={() => setShow(false)}>
-                  <Text style={{ color: colors.brand, fontWeight: '600', fontSize: 16 }}>Tamam</Text>
+                  <Text style={{ color: colors.brand, fontWeight: '600', fontSize: 16 }}>{t('doneBtn')}</Text>
                 </TouchableOpacity>
               </View>
               <DateTimePicker
@@ -72,7 +74,7 @@ export default function DatePickerField({ label, value, onChange, placeholder, o
                 display="spinner"
                 onChange={handleChange}
                 style={{ height: 200 }}
-                locale="tr-TR"
+                locale={lang === 'tr' ? 'tr-TR' : 'en-US'}
               />
             </View>
           </View>

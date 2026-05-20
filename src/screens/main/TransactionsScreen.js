@@ -19,6 +19,7 @@ import { useToast } from '../../context/ToastContext';
 import { fmt } from '../../utils/format';
 import { todayLocalISO } from '../../utils/dateUtils';
 import { API, authFetch } from '../../utils/api';
+import { getToken } from '../../utils/tokenStorage';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
@@ -132,7 +133,7 @@ export default function TransactionsScreen({ navigation }) {
     setImporting(true);
     setImportPreview(null);
     try {
-      const token = await (await import('@react-native-async-storage/async-storage')).default.getItem('auth_token');
+      const token = await getToken();
       const formData = new FormData();
       formData.append('statement', { uri, name: name || 'statement.jpg', type: mimeType || 'image/jpeg' });
       const res = await fetch(`${API}/transactions/import?preview=true`, {

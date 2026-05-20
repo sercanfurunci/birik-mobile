@@ -1,6 +1,6 @@
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, StatusBar,
-  Modal, KeyboardAvoidingView, Platform, Alert, Switch, Image, ActivityIndicator,
+  Modal, KeyboardAvoidingView, Platform, Pressable, Switch, Image, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -370,6 +370,7 @@ export default function SubscriptionsScreen() {
   const [autoCharge, setAutoCharge] = useState(false);
   const [reminderDays, setReminderDays] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   useEffect(() => {
     authFetch(`${API}/subscriptions`)
@@ -459,19 +460,18 @@ export default function SubscriptionsScreen() {
 
   const handleDelete = (s) => {
     setDetailSub(null);
-    Alert.alert(t('subDeleteTitle'), s.name, [
-      { text: t('cancelBtn'), style: 'cancel' },
-      {
-        text: t('deleteBtn'), style: 'destructive',
-        onPress: async () => {
-          const res = await queuedAuthFetch(`${API}/subscriptions/${s.id}`, { method: 'DELETE' });
-          if (res.ok) {
-            setSubs(prev => prev.filter(x => x.id !== s.id));
-            showToast(t('toastSubDeleted'));
-          }
-        },
-      },
-    ]);
+    setDeleteTarget(s);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    const s = deleteTarget;
+    setDeleteTarget(null);
+    const res = await queuedAuthFetch(`${API}/subscriptions/${s.id}`, { method: 'DELETE' });
+    if (res.ok) {
+      setSubs(prev => prev.filter(x => x.id !== s.id));
+      showToast(t('toastSubDeleted'));
+    }
   };
 
   const handleAddExpense = async (sub, convertedAmount) => {
@@ -754,6 +754,31 @@ export default function SubscriptionsScreen() {
           </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>
+
+      <Modal visible={!!deleteTarget} transparent animationType="fade" onRequestClose={() => setDeleteTarget(null)}>
+        <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }} onPress={() => setDeleteTarget(null)}>
+          <Pressable onPress={() => {}} style={[styles.deleteSheet, { backgroundColor: colors.surface }]}>
+            <View style={[styles.dragHandle, { backgroundColor: colors.border, alignSelf: 'center', marginBottom: 20 }]} />
+            <View style={[styles.deleteIconWrap, { backgroundColor: `${colors.red}18` }]}>
+              <Ionicons name="trash-outline" size={28} color={colors.red} />
+            </View>
+            <Text style={[styles.deleteTitle, { color: colors.text1 }]}>{t('deleteSubscription')}</Text>
+            <Text style={[styles.deleteSub, { color: colors.text3 }]} numberOfLines={2}>
+              {deleteTarget?.name}
+              {'\n'}
+              <Text style={{ fontWeight: '600', color: colors.text2 }}>
+                {(CURRENCIES.find(c => c.code === deleteTarget?.currency)?.symbol || userSymbol)}{fmt(deleteTarget?.amount)} · {t(`subCycle_${deleteTarget?.billing_cycle || 'monthly'}`)}
+              </Text>
+            </Text>
+            <TouchableOpacity style={[styles.deleteConfirmBtn, { backgroundColor: colors.red }]} onPress={confirmDelete}>
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>{t('deleteBtn')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.deleteCancelBtn, { borderColor: colors.border }]} onPress={() => setDeleteTarget(null)}>
+              <Text style={{ color: colors.text2, fontWeight: '600', fontSize: 15 }}>{t('cancelBtn')}</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -810,4 +835,10 @@ const styles = StyleSheet.create({
   autoChargeRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderRadius: 12, borderWidth: 1, marginBottom: 16 },
   autoChargeLabel: { fontSize: 14, fontWeight: '600', marginBottom: 2 },
   autoChargeDesc: { fontSize: 12, lineHeight: 16 },
+  deleteSheet: { borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 40 },
+  deleteIconWrap: { width: 60, height: 60, borderRadius: 18, justifyContent: 'center', alignItems: 'center', alignSelf: 'center', marginBottom: 16 },
+  deleteTitle: { fontSize: 18, fontWeight: '700', textAlign: 'center', marginBottom: 8 },
+  deleteSub: { fontSize: 14, textAlign: 'center', lineHeight: 22, marginBottom: 28 },
+  deleteConfirmBtn: { paddingVertical: 15, borderRadius: 14, alignItems: 'center', marginBottom: 10 },
+  deleteCancelBtn: { paddingVertical: 15, borderRadius: 14, alignItems: 'center', borderWidth: 1 },
 });

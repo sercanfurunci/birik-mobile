@@ -105,7 +105,7 @@ export default function RegisterScreen({ navigation }) {
           </TouchableOpacity>
 
           <View style={styles.brand}>
-            <Image source={require('../../../assets/birik-icon.png')} style={styles.brandIcon} />
+            <Image source={require('../../../assets/birik-icon-fg.png')} style={styles.brandIcon} />
             <Text style={[styles.brandName, { color: colors.text1 }]}>{t('appName')}</Text>
             <Text style={[styles.brandSub, { color: colors.text3 }]}>{t('appSubtitle')}</Text>
           </View>
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
   container: { paddingHorizontal: 20, paddingBottom: 40, paddingTop: 8 },
   backBtn: { marginBottom: 24 },
   brand: { alignItems: 'center', marginBottom: 32 },
-  brandIcon: { width: 56, height: 56, borderRadius: 14, marginBottom: 8 },
+  brandIcon: { width: 96, height: 96, marginBottom: 4 },
   brandName: { fontSize: 24, fontWeight: '700', letterSpacing: -0.5 },
   brandSub: { fontSize: 14, marginTop: 4 },
   card: { padding: 24, borderRadius: 18, borderWidth: 1, marginBottom: 20 },

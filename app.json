@@ -8,11 +8,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/birik-icon.png",
+      "image": "./assets/birik-icon-fg.png",
       "resizeMode": "contain",
       "backgroundColor": "#F7F4ED",
       "dark": {
-        "image": "./assets/birik-icon.png",
+        "image": "./assets/birik-icon-fg.png",
         "resizeMode": "contain",
         "backgroundColor": "#0D0D0D"
       }
@@ -22,8 +22,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/birik-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/birik-icon-fg.png",
+        "backgroundColor": "#0D0D0D"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.birik.mobile"
@@ -36,7 +36,8 @@
           "color": "#22c55e"
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-secure-store"
     ],
     "web": {
       "favicon": "./assets/favicon.png"

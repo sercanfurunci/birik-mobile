@@ -1,11 +1,11 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import { enqueue } from './offlineQueue';
+import { getToken } from './tokenStorage';
 
 export const API = 'https://api.furunci.tech';
 
 export async function authFetch(url, opts = {}) {
-  const token = await AsyncStorage.getItem('auth_token');
+  const token = await getToken();
   return fetch(url, {
     ...opts,
     headers: {

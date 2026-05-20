@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, StatusBar, Modal, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, StatusBar, Modal, KeyboardAvoidingView, Platform, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
@@ -35,6 +35,7 @@ export default function GoalsScreen() {
   const [goalSaved, setGoalSaved] = useState('');
   const [goalDate, setGoalDate] = useState('');
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   useEffect(() => {
     authFetch(`${API}/goals`)
@@ -99,32 +100,31 @@ export default function GoalsScreen() {
   };
 
   const handleDelete = (g) => {
-    Alert.alert(t('goalDeleteTitle'), g.name, [
-      { text: t('cancelBtn'), style: 'cancel' },
-      {
-        text: t('deleteBtn'), style: 'destructive',
-        onPress: async () => {
-          const res = await queuedAuthFetch(`${API}/goals/${g.id}`, { method: 'DELETE' });
-          if (res.ok) {
-            setGoals(prev => prev.filter(x => x.id !== g.id));
-            showToast(t('toastGoalDeleted'));
-          }
-        },
-      },
-    ]);
+    setDeleteTarget(g);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    const g = deleteTarget;
+    setDeleteTarget(null);
+    const res = await queuedAuthFetch(`${API}/goals/${g.id}`, { method: 'DELETE' });
+    if (res.ok) {
+      setGoals(prev => prev.filter(x => x.id !== g.id));
+      showToast(t('toastGoalDeleted'));
+    }
   };
 
   const getStatus = (g) => {
     const target = parseFloat(g.target_amount) || 0;
     const saved = parseFloat(g.saved_amount || 0);
     const pct = target > 0 ? Math.min(100, Math.round((saved / target) * 100)) : 0;
-    if (pct >= 100) return { label: t('goalComplete'), color: '#22C55E', pct };
+    if (pct >= 100) return { label: t('goalComplete'), color: colors.green, pct };
     if (!g.target_date) return { label: null, color: null, pct };
     const due = new Date(g.target_date + 'T00:00:00');
     const now = new Date();
     const diffDays = Math.round((due - now) / 86400000);
-    if (diffDays < 0) return { label: t('goalOverdue'), color: '#EF4444', pct };
-    if (diffDays === 0) return { label: t('goalToday'), color: '#F59E0B', pct };
+    if (diffDays < 0) return { label: t('goalOverdue'), color: colors.red, pct };
+    if (diffDays === 0) return { label: t('goalToday'), color: colors.gold, pct };
     return { label: `${diffDays} ${t('goalDaysLeft')}`, color: null, pct };
   };
 
@@ -267,6 +267,31 @@ export default function GoalsScreen() {
           </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>
+
+      <Modal visible={!!deleteTarget} transparent animationType="fade" onRequestClose={() => setDeleteTarget(null)}>
+        <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }} onPress={() => setDeleteTarget(null)}>
+          <Pressable onPress={() => {}} style={[styles.deleteSheet, { backgroundColor: colors.surface }]}>
+            <View style={[styles.dragHandle, { backgroundColor: colors.border, alignSelf: 'center', marginBottom: 20 }]} />
+            <View style={[styles.deleteIconWrap, { backgroundColor: `${colors.red}18` }]}>
+              <Ionicons name="trash-outline" size={28} color={colors.red} />
+            </View>
+            <Text style={[styles.deleteTitle, { color: colors.text1 }]}>{t('deleteGoal')}</Text>
+            <Text style={[styles.deleteSub, { color: colors.text3 }]} numberOfLines={2}>
+              {deleteTarget?.emoji} {deleteTarget?.name}
+              {'\n'}
+              <Text style={{ fontWeight: '600', color: colors.text2 }}>
+                {symbol}{fmt(deleteTarget?.target_amount)}
+              </Text>
+            </Text>
+            <TouchableOpacity style={[styles.deleteConfirmBtn, { backgroundColor: colors.red }]} onPress={confirmDelete}>
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>{t('deleteBtn')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.deleteCancelBtn, { borderColor: colors.border }]} onPress={() => setDeleteTarget(null)}>
+              <Text style={{ color: colors.text2, fontWeight: '600', fontSize: 15 }}>{t('cancelBtn')}</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -304,4 +329,10 @@ const styles = StyleSheet.create({
   fieldLabel: { fontSize: 12, fontWeight: '600', letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 8 },
   emojiGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
   emojiBtn: { width: 48, height: 48, borderRadius: 12, justifyContent: 'center', alignItems: 'center', backgroundColor: '#00000008' },
+  deleteSheet: { borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 40 },
+  deleteIconWrap: { width: 60, height: 60, borderRadius: 18, justifyContent: 'center', alignItems: 'center', alignSelf: 'center', marginBottom: 16 },
+  deleteTitle: { fontSize: 18, fontWeight: '700', textAlign: 'center', marginBottom: 8 },
+  deleteSub: { fontSize: 14, textAlign: 'center', lineHeight: 22, marginBottom: 28 },
+  deleteConfirmBtn: { paddingVertical: 15, borderRadius: 14, alignItems: 'center', marginBottom: 10 },
+  deleteCancelBtn: { paddingVertical: 15, borderRadius: 14, alignItems: 'center', borderWidth: 1 },
 });

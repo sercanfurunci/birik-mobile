@@ -10,7 +10,7 @@ export default function Splash() {
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <View style={styles.center}>
         <Image
-          source={require('../../assets/birik-icon.png')}
+          source={require('../../assets/birik-icon-fg.png')}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -30,7 +30,7 @@ export default function Splash() {
 const styles = StyleSheet.create({
   root: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
   center: { alignItems: 'center' },
-  logo: { width: 120, height: 120, borderRadius: 26, marginBottom: 22, backgroundColor: 'transparent' },
+  logo: { width: 160, height: 160, marginBottom: 18, backgroundColor: 'transparent' },
   appName: { fontSize: 34, fontWeight: '800', letterSpacing: -1, marginBottom: 6 },
   tagline: { fontSize: 14, textAlign: 'center', lineHeight: 20, maxWidth: 280 },
   footer: { position: 'absolute', bottom: 56, alignItems: 'center' },

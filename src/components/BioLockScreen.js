@@ -21,7 +21,7 @@ export default function BioLockScreen({ user, onUnlock, onSignOut }) {
 
   return (
     <View style={[s.root, { backgroundColor: colors.bg }]}>
-      <Image source={require('../../assets/birik-icon.png')} style={s.logo} />
+      <Image source={require('../../assets/birik-icon-fg.png')} style={s.logo} />
       <Text style={[s.appName, { color: colors.text1 }]}>Birik</Text>
 
       {!!displayName && (
@@ -50,7 +50,7 @@ export default function BioLockScreen({ user, onUnlock, onSignOut }) {
 
 const s = StyleSheet.create({
   root: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40 },
-  logo: { width: 72, height: 72, borderRadius: 18, marginBottom: 16 },
+  logo: { width: 110, height: 110, marginBottom: 12 },
   appName: { fontSize: 28, fontWeight: '800', letterSpacing: -0.5, marginBottom: 6 },
   greeting: { fontSize: 15, marginBottom: 48 },
   unlockBtn: { width: '100%', paddingVertical: 16, borderRadius: 14, alignItems: 'center', marginBottom: 16 },

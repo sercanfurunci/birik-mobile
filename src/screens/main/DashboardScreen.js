@@ -189,7 +189,7 @@ export default function DashboardScreen({ navigation }) {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} onScrollBeginDrag={() => setSelectedDay(null)}>
         {/* Header — logo + app name + username, matches web */}
         <View style={styles.header}>
-          <Image source={require('../../../assets/birik-icon.png')} style={styles.logo} />
+          <Image source={require('../../../assets/birik-icon-fg.png')} style={styles.logo} />
           <View style={{ flex: 1, minWidth: 0 }}>
             <Text style={[styles.appName, { color: colors.text1 }]}>{t('appName')}</Text>
             {(currentUser?.username || currentUser?.email) && (
@@ -567,7 +567,7 @@ export default function DashboardScreen({ navigation }) {
 const styles = StyleSheet.create({
   scroll: { padding: 16, paddingBottom: 32 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20 },
-  logo: { width: 42, height: 42, borderRadius: 10 },
+  logo: { width: 56, height: 56 },
   appName: { fontSize: 22, fontWeight: '800', letterSpacing: -0.5 },
   userName: { fontSize: 12, marginTop: 2 },
   heroCard: { padding: 20, marginBottom: 20 },
