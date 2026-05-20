@@ -164,6 +164,21 @@ export default function DashboardScreen({ navigation }) {
     return { projectedTotal, fixedUpcoming, changePct };
   }, [thisMonthExp, dayElapsed, daysLeft, avgDaily, subscriptions, thisMonthTotal, transactions, thisYM, now]);
 
+  // Month-over-month insight: last month up to the same day
+  const monthInsight = useMemo(() => {
+    if (thisMonthExp.length === 0) return null;
+    const lastDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastYM = `${lastDate.getFullYear()}-${String(lastDate.getMonth() + 1).padStart(2, '0')}`;
+    const sameDayStr = `${lastYM}-${String(dayElapsed).padStart(2, '0')}`;
+    const lastSameDay = transactions
+      .filter(tx => tx.type === 'expense' && (tx.date || '').slice(0, 10) >= `${lastYM}-01` && (tx.date || '').slice(0, 10) <= sameDayStr)
+      .reduce((s, tx) => s + parseFloat(tx.amount || 0), 0);
+    if (lastSameDay === 0) return null;
+    const diff = thisMonthTotal - lastSameDay;
+    const pct = (diff / lastSameDay) * 100;
+    return { thisMonthTotal, lastSameDay, diff, pct };
+  }, [thisMonthExp, transactions, now, thisYM, dayElapsed, thisMonthTotal]);
+
   const incomeCount = incomeTxs.length;
   const expenseCount = expenseTxs.length;
   const totalCount = transactions.length;
@@ -218,6 +233,37 @@ export default function DashboardScreen({ navigation }) {
             <Text style={{ fontSize: 40, marginBottom: 12 }}>📊</Text>
             <Text style={[styles.emptyTitle, { color: colors.text1 }]}>{t('noTransactionsDash')}</Text>
             <Text style={[styles.emptyDesc, { color: colors.text3 }]}>{t('addFirstTransaction')}</Text>
+          </Card>
+        )}
+
+        {/* Month-over-month insight */}
+        {monthInsight && (
+          <Card style={[styles.insightCard, { borderColor: monthInsight.pct > 0 ? `${colors.red}55` : `${colors.green}55`, backgroundColor: monthInsight.pct > 0 ? `${colors.red}08` : `${colors.green}08` }]}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <Text style={[styles.insightTitle, { color: colors.text1 }]}>{t('insightHowGoing')}</Text>
+              <View style={[styles.insightBadge, { backgroundColor: monthInsight.pct > 0 ? `${colors.red}18` : `${colors.green}18` }]}>
+                <Text style={{ fontSize: 12, fontWeight: '700', color: monthInsight.pct > 0 ? colors.red : colors.green }}>
+                  {monthInsight.pct > 0 ? '+' : ''}{monthInsight.pct.toFixed(1)}%
+                </Text>
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', gap: 20, marginTop: 10 }}>
+              <View>
+                <Text style={{ fontSize: 10, color: colors.text3, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 3 }}>{t('statThisMonth')}</Text>
+                <Text style={{ fontSize: 18, fontWeight: '700', color: monthInsight.pct > 0 ? colors.red : colors.green }}>
+                  {symbol}{fmt(monthInsight.thisMonthTotal)}
+                </Text>
+              </View>
+              <View>
+                <Text style={{ fontSize: 10, color: colors.text3, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 3 }}>{t('insightSameDayLastMonth')}</Text>
+                <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text2 }}>
+                  {symbol}{fmt(monthInsight.lastSameDay)}
+                </Text>
+              </View>
+            </View>
+            <Text style={{ fontSize: 12, color: monthInsight.pct > 0 ? colors.red : colors.green, marginTop: 8, fontWeight: '600' }}>
+              {monthInsight.pct > 0 ? t('insightOverSpending') : t('insightOnTrack')}
+            </Text>
           </Card>
         )}
 
@@ -576,4 +622,7 @@ const styles = StyleSheet.create({
   goalName: { fontSize: 14, fontWeight: '500' },
   goalBar: { height: 6, borderRadius: 3, overflow: 'hidden' },
   goalBarFill: { height: '100%', borderRadius: 3 },
+  insightCard: { padding: 16, marginBottom: 12, borderWidth: 1, borderRadius: 14 },
+  insightTitle: { fontSize: 14, fontWeight: '700', flex: 1, marginRight: 8 },
+  insightBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, flexShrink: 0 },
 });
