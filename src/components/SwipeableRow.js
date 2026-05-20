@@ -75,7 +75,7 @@ export default function SwipeableRow({ children, onDelete }) {
       <View style={s.action}>
         <Ionicons name="trash-outline" size={22} color="#fff" />
       </View>
-      <Animated.View style={{ transform: [{ translateX }] }} {...pan.panHandlers}>
+      <Animated.View style={{ transform: [{ translateX }], backgroundColor: colors.bg, borderRadius: 14 }} {...pan.panHandlers}>
         {children}
       </Animated.View>
     </View>
