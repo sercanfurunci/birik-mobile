@@ -94,7 +94,7 @@ export default function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{ headerShown: false }}
-        initialRouteName={pendingBioUser ? 'Login' : 'Landing'}
+        initialRouteName={currentUser ? 'Main' : pendingBioUser ? 'Login' : 'Landing'}
       >
         {!currentUser ? (
           <>
