@@ -1,15 +1,22 @@
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { useTheme } from '../context/ThemeContext';
 
 export default function Button({ onPress, title, loading, disabled, variant = 'primary', style }) {
   const { colors } = useTheme();
+
+  const handlePress = () => {
+    if (disabled || loading) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onPress?.();
+  };
 
   const isPrimary = variant === 'primary';
   const isSecondary = variant === 'secondary';
 
   return (
     <TouchableOpacity
-      onPress={onPress}
+      onPress={handlePress}
       disabled={disabled || loading}
       activeOpacity={0.75}
       style={[

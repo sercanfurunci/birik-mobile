@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState, useMemo } from 'react';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
+import * as Haptics from 'expo-haptics';
 import { useTheme } from '../../context/ThemeContext';
 import { useLang } from '../../context/LangContext';
 import { useAuth } from '../../context/AuthContext';
@@ -120,6 +121,7 @@ export default function TransactionsScreen({ navigation }) {
         {
           text: t('deleteBtn'), style: 'destructive',
           onPress: async () => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             const ok = await deleteTransaction(tx.id);
             if (ok) { setEditingTx(null); showToast(t('toastTxDeleted')); }
           },

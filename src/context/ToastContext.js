@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback } from 'react';
+import * as Haptics from 'expo-haptics';
 
 const ToastContext = createContext(null);
 
@@ -8,6 +9,11 @@ export function ToastProvider({ children }) {
   const showToast = useCallback((msg, type = 'success') => {
     const id = Date.now() + Math.random();
     setToasts(p => [...p, { id, msg, type }]);
+    if (type === 'error') {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } else {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
     setTimeout(() => {
       setToasts(p => p.filter(t => t.id !== id));
     }, 3000);
