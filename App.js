@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { AppState, Animated } from 'react-native';
+import { Animated } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { LangProvider, useLang } from './src/context/LangContext';
@@ -13,23 +13,17 @@ import AppNavigator from './src/navigation/AppNavigator';
 import ToastContainer from './src/components/Toast';
 import OfflineBanner from './src/components/OfflineBanner';
 import Splash from './src/components/Splash';
-import BioLockScreen from './src/components/BioLockScreen';
 import { requestNotificationPermission } from './src/utils/notifications';
-import { getBiometricLockEnabled } from './src/utils/biometric';
 
 const MIN_SPLASH_MS = 2600;
 
 function AppContent() {
   const { colors, isDark, themeChecked } = useTheme();
   const { langChecked } = useLang();
-  const { currentUser, authChecked, updateUser, handleLogout } = useAuth();
+  const { currentUser, authChecked, updateUser } = useAuth();
   const [minElapsed, setMinElapsed] = useState(false);
-  const [bioLocked, setBioLocked] = useState(false);
-  const [bioChecked, setBioChecked] = useState(false);
-  const appState = useRef(AppState.currentState);
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const prevIsDark = useRef(null);
-  const bioCheckDone = useRef(false);
 
   useEffect(() => {
     const t = setTimeout(() => setMinElapsed(true), MIN_SPLASH_MS);
@@ -50,31 +44,6 @@ function AppContent() {
     ]).start();
   }, [isDark]);
 
-  // Determine initial bio lock state (runs once after auth resolves)
-  useEffect(() => {
-    if (!authChecked || bioCheckDone.current) return;
-    bioCheckDone.current = true;
-    (async () => {
-      if (currentUser) {
-        const enabled = await getBiometricLockEnabled();
-        setBioLocked(enabled);
-      }
-      setBioChecked(true);
-    })();
-  }, [authChecked, currentUser]);
-
-  // Re-lock on background → foreground
-  useEffect(() => {
-    if (!currentUser) return;
-    const sub = AppState.addEventListener('change', async nextState => {
-      if (appState.current.match(/inactive|background/) && nextState === 'active') {
-        const enabled = await getBiometricLockEnabled();
-        if (enabled) setBioLocked(true);
-      }
-      appState.current = nextState;
-    });
-    return () => sub.remove();
-  }, [currentUser]);
 
   const handleSaveCategories = async (cats) => {
     try {
@@ -90,18 +59,8 @@ function AppContent() {
     } catch {}
   };
 
-  if (!authChecked || !themeChecked || !langChecked || !minElapsed || !bioChecked) {
+  if (!authChecked || !themeChecked || !langChecked || !minElapsed) {
     return <Splash />;
-  }
-
-  if (bioLocked && currentUser) {
-    return (
-      <BioLockScreen
-        user={currentUser}
-        onUnlock={() => setBioLocked(false)}
-        onSignOut={() => { handleLogout(); setBioLocked(false); }}
-      />
-    );
   }
 
   return (

@@ -1,9 +1,11 @@
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, StatusBar, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { useLang } from '../../context/LangContext';
 import { useAuth } from '../../context/AuthContext';
+import { authenticateWithBiometrics } from '../../utils/biometric';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
 import { API } from '../../utils/api';
@@ -11,7 +13,7 @@ import { API } from '../../utils/api';
 export default function LoginScreen({ navigation }) {
   const { colors, isDark } = useTheme();
   const { t } = useLang();
-  const { handleAuthSuccess } = useAuth();
+  const { handleAuthSuccess, pendingBioUser, completeBioLogin } = useAuth();
 
   const [loginMethod, setLoginMethod] = useState('email');
   const [email, setEmail] = useState('');
@@ -19,6 +21,15 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleBioLogin = async () => {
+    const ok = await authenticateWithBiometrics();
+    if (ok) completeBioLogin();
+  };
+
+  useEffect(() => {
+    if (pendingBioUser) handleBioLogin();
+  }, []);
 
   const handleSubmit = async () => {
     setError('');
@@ -105,6 +116,15 @@ export default function LoginScreen({ navigation }) {
             )}
 
             <Button title={loading ? t('signingIn') : t('signInBtn')} onPress={handleSubmit} loading={loading} style={{ marginTop: 16 }} />
+
+            {!!pendingBioUser && (
+              <TouchableOpacity onPress={handleBioLogin} style={styles.bioRow} activeOpacity={0.7}>
+                <View style={[styles.bioBtn, { borderColor: colors.border, backgroundColor: colors.surface2 }]}>
+                  <Ionicons name="finger-print" size={26} color={colors.brand} />
+                </View>
+                <Text style={[styles.bioLabel, { color: colors.text3 }]}>{t('bioUnlockBtn')}</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           <View style={styles.switchRow}>
@@ -134,4 +154,7 @@ const styles = StyleSheet.create({
   fieldLabel: { fontSize: 11, fontWeight: '600', letterSpacing: 0.5, textTransform: 'uppercase' },
   errorBox: { padding: 12, borderRadius: 10, borderWidth: 1, marginTop: 8 },
   switchRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
+  bioRow: { alignItems: 'center', marginTop: 20, gap: 8 },
+  bioBtn: { width: 56, height: 56, borderRadius: 28, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
+  bioLabel: { fontSize: 12 },
 });

@@ -84,20 +84,23 @@ function MainStack() {
 }
 
 export default function AppNavigator() {
-  const { currentUser, authChecked } = useAuth();
+  const { currentUser, pendingBioUser, authChecked } = useAuth();
 
   if (!authChecked) return null;
 
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator
+        screenOptions={{ headerShown: false }}
+        initialRouteName={pendingBioUser ? 'Login' : 'Landing'}
+      >
         {!currentUser ? (
           <>
             <Stack.Screen name="Landing"        component={LandingScreen} />
             <Stack.Screen name="Login"          component={LoginScreen} />
             <Stack.Screen name="Register"       component={RegisterScreen} />
             <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-            <Stack.Screen name="Legal" component={LegalScreen} />
+            <Stack.Screen name="Legal"          component={LegalScreen} />
           </>
         ) : (
           <Stack.Screen name="Main" component={MainStack} />

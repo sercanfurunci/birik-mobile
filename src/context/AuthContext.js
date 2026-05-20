@@ -3,11 +3,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import { API, authFetch, queuedAuthFetch } from '../utils/api';
 import { getQueue, removeFromQueue } from '../utils/offlineQueue';
+import { getBiometricLockEnabled } from '../utils/biometric';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
+  const [pendingBioUser, setPendingBioUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [transactions, setTransactions] = useState([]);
   const [pendingCount, setPendingCount] = useState(0);
@@ -15,25 +17,31 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     getQueue().then(q => setPendingCount(q.length));
-    AsyncStorage.getItem('auth_token').then(token => {
-      if (!token) { setAuthChecked(true); return; }
-      authFetch(`${API}/auth/me`)
-        .then(res => res.ok ? res.json() : null)
-        .then(data => {
-          if (data?.id) {
-            setCurrentUser({
-              id: data.id,
-              email: data.email || null,
-              phone: data.phone || null,
-              username: data.username || null,
-              currency: data.currency || 'USD',
-              custom_categories: data.custom_categories || [],
-            });
-          }
-        })
-        .catch(() => {})
-        .finally(() => setAuthChecked(true));
-    });
+    (async () => {
+      try {
+        const token = await AsyncStorage.getItem('auth_token');
+        if (!token) return;
+        const res = await authFetch(`${API}/auth/me`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data?.id) return;
+        const user = {
+          id: data.id,
+          email: data.email || null,
+          phone: data.phone || null,
+          username: data.username || null,
+          currency: data.currency || 'USD',
+          custom_categories: data.custom_categories || [],
+        };
+        const bioEnabled = await getBiometricLockEnabled();
+        if (bioEnabled) {
+          setPendingBioUser(user);
+        } else {
+          setCurrentUser(user);
+        }
+      } catch {}
+      finally { setAuthChecked(true); }
+    })();
   }, []);
 
   const refreshTransactions = useCallback(() => {
@@ -52,10 +60,18 @@ export function AuthProvider({ children }) {
     setCurrentUser(user);
   }, []);
 
+  const completeBioLogin = useCallback(() => {
+    if (pendingBioUser) {
+      setCurrentUser(pendingBioUser);
+      setPendingBioUser(null);
+    }
+  }, [pendingBioUser]);
+
   const handleLogout = useCallback(async () => {
     try { await authFetch(`${API}/auth/logout`, { method: 'POST' }); } catch {}
     await AsyncStorage.removeItem('auth_token');
     setCurrentUser(null);
+    setPendingBioUser(null);
     setTransactions([]);
   }, []);
 
@@ -151,8 +167,8 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{
-      currentUser, authChecked, transactions,
-      handleAuthSuccess, handleLogout, updateUser,
+      currentUser, pendingBioUser, authChecked, transactions,
+      handleAuthSuccess, handleLogout, completeBioLogin, updateUser,
       refreshTransactions, addTransaction, deleteTransaction, editTransaction,
       pendingCount, syncOfflineQueue, syncVersion,
     }}>
