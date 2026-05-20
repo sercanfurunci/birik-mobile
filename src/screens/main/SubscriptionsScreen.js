@@ -85,10 +85,31 @@ function monthlyEquivalent(amount, cycle) {
   return amount;
 }
 
-function monthsActive(startedAt) {
+function advanceToNextBilling(dateStr, cycle) {
+  if (!dateStr) return null;
+  const d = parseLocalDate(dateStr) || new Date(dateStr);
+  if (!d) return null;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const result = new Date(d);
+  while (result < today) {
+    if (cycle === 'weekly') result.setDate(result.getDate() + 7);
+    else if (cycle === 'yearly') result.setFullYear(result.getFullYear() + 1);
+    else result.setMonth(result.getMonth() + 1);
+  }
+  return result;
+}
+
+function periodsActive(startedAt, cycle) {
   if (!startedAt) return 1;
   const start = parseLocalDate(startedAt) || new Date(startedAt);
   const now = new Date();
+  if (cycle === 'weekly') {
+    return Math.max(1, Math.floor((now - start) / (7 * 86400000)));
+  }
+  if (cycle === 'yearly') {
+    const y = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
+    return Math.max(1, Math.floor(y / 12));
+  }
   const m = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
   return Math.max(1, m);
 }
@@ -155,14 +176,11 @@ function SubCard({ sub, userCurrency, colors, t, formatDate, onPress }) {
   const [rate, setRate] = useState(null);
   const subCurr = CURRENCIES.find(c => c.code === sub.currency) || CURRENCIES[0];
   const needsConv = sub.currency && sub.currency !== userCurrency;
-  const days = (() => {
-    const d = sub.next_billing_date || sub.next_billing;
-    if (!d) return null;
-    const target = parseLocalDate(d);
-    if (!target) return null;
+  const nextDate = advanceToNextBilling(sub.next_billing_date || sub.next_billing, sub.billing_cycle);
+  const days = nextDate ? (() => {
     const today = new Date(); today.setHours(0, 0, 0, 0);
-    return Math.round((target - today) / 86400000);
-  })();
+    return Math.round((nextDate - today) / 86400000);
+  })() : null;
 
   useEffect(() => {
     if (needsConv) getRate(sub.currency, userCurrency).then(setRate);
@@ -210,7 +228,7 @@ function SubCard({ sub, userCurrency, colors, t, formatDate, onPress }) {
           <View style={[styles.billingRow, { borderTopColor: colors.border }]}>
             <Text style={[styles.billingLabel, { color: colors.text3 }]}>{t('subNextBilling')}</Text>
             <Text style={[styles.billingDate, { color: billingColor }]}>
-              {formatDate(sub.next_billing_date || sub.next_billing)} · {daysLabel}
+              {nextDate ? formatDate(nextDate.toISOString().slice(0, 10)) : '—'} · {daysLabel}
             </Text>
           </View>
         )}
@@ -227,25 +245,24 @@ function SubDetailModal({ sub, userCurrency, colors, t, formatDate, onClose, onE
   const subCurr = CURRENCIES.find(c => c.code === sub.currency) || CURRENCIES[0];
   const userCurrObj = CURRENCIES.find(c => c.code === userCurrency) || subCurr;
   const needsConv = sub.currency && sub.currency !== userCurrency;
-  const months = monthsActive(sub.started_at);
-  const totalSpent = parseFloat(sub.amount) * months;
+  const periods = periodsActive(sub.started_at, sub.billing_cycle);
+  const totalSpent = parseFloat(sub.amount) * periods;
+  const periodsLabel = sub.billing_cycle === 'weekly' ? t('subWeeksActive')
+    : sub.billing_cycle === 'yearly' ? t('subYearsActive')
+    : t('subMonthsActive');
 
   useEffect(() => {
     if (needsConv) getRate(sub.currency, userCurrency).then(setRate);
   }, [sub.currency, userCurrency, needsConv]);
 
-  const days = (() => {
-    const d = sub.next_billing_date || sub.next_billing;
-    if (!d) return null;
-    const target = parseLocalDate(d);
-    if (!target) return null;
+  const nextDate = advanceToNextBilling(sub.next_billing_date || sub.next_billing, sub.billing_cycle);
+  const days = nextDate ? (() => {
     const today = new Date(); today.setHours(0, 0, 0, 0);
-    return Math.round((target - today) / 86400000);
-  })();
+    return Math.round((nextDate - today) / 86400000);
+  })() : null;
 
   const daysLabel = days === null ? '—'
     : days === 0 ? t('subToday')
-    : days < 0 ? t('subOverdue')
     : `${days} ${t('subDays')}`;
 
   const handleAddExpense = async () => {
@@ -258,7 +275,7 @@ function SubDetailModal({ sub, userCurrency, colors, t, formatDate, onClose, onE
   };
 
   const stats = [
-    [t('subMonthsActive'), String(months)],
+    [periodsLabel, String(periods)],
     [t('subTotalSpent'), `${subCurr.symbol}${fmt(totalSpent)}`],
     [t('subStartedAt'), sub.started_at ? formatDate(sub.started_at) : '—'],
     [t('subNextBilling'), daysLabel],
