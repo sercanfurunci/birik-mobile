@@ -238,11 +238,12 @@ export default function DashboardScreen({ navigation }) {
 
         {/* Month-over-month insight */}
         {monthInsight && (
-          <Card style={[styles.insightCard, { borderColor: monthInsight.pct > 0 ? `${colors.red}55` : `${colors.green}55`, backgroundColor: monthInsight.pct > 0 ? `${colors.red}08` : `${colors.green}08` }]}>
+          <Card style={[styles.insightCard, { borderColor: colors.border, overflow: 'hidden' }]}>
+            <View style={[styles.insightAccent, { backgroundColor: monthInsight.pct > 0 ? colors.red : colors.green }]} />
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <Text style={[styles.insightTitle, { color: colors.text1 }]}>{t('insightHowGoing')}</Text>
-              <View style={[styles.insightBadge, { backgroundColor: monthInsight.pct > 0 ? `${colors.red}18` : `${colors.green}18` }]}>
-                <Text style={{ fontSize: 12, fontWeight: '700', color: monthInsight.pct > 0 ? colors.red : colors.green }}>
+              <View style={[styles.insightBadge, { backgroundColor: monthInsight.pct > 0 ? colors.red : colors.green }]}>
+                <Text style={{ fontSize: 12, fontWeight: '700', color: '#fff' }}>
                   {monthInsight.pct > 0 ? '+' : ''}{monthInsight.pct.toFixed(1)}%
                 </Text>
               </View>
@@ -626,7 +627,8 @@ const styles = StyleSheet.create({
   goalName: { fontSize: 14, fontWeight: '500' },
   goalBar: { height: 6, borderRadius: 3, overflow: 'hidden' },
   goalBarFill: { height: '100%', borderRadius: 3 },
-  insightCard: { padding: 16, marginBottom: 12, borderWidth: 1, borderRadius: 14 },
+  insightCard: { padding: 16, paddingLeft: 20, marginBottom: 12, borderWidth: 1, borderRadius: 14 },
+  insightAccent: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 4 },
   insightTitle: { fontSize: 14, fontWeight: '700', flex: 1, marginRight: 8 },
   insightBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, flexShrink: 0 },
   prefBtn: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center', borderWidth: 1 },
