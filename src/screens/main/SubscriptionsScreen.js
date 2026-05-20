@@ -12,6 +12,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API, authFetch, queuedAuthFetch } from '../../utils/api';
+import { scheduleSubscriptionReminders } from '../../utils/notifications';
 import { fmt } from '../../utils/format';
 import { todayLocalISO, parseLocalDate } from '../../utils/dateUtils';
 import { CURRENCIES } from '../../constants/currencies';
@@ -371,6 +372,7 @@ export default function SubscriptionsScreen() {
       .then(async d => {
         if (!Array.isArray(d)) return;
         setSubs(d);
+        scheduleSubscriptionReminders(d).catch(() => {});
         // Fetch exchange rates for all unique currencies
         const uniqueCurrencies = [...new Set(d.map(s => s.currency).filter(c => c && c !== userCurrency))];
         const ratesObj = {};
@@ -437,9 +439,11 @@ export default function SubscriptionsScreen() {
       });
       if (res.ok) {
         const data = await res.json();
-        setSubs(prev => editingSub
-          ? prev.map(s => s.id === editingSub.id ? data : s)
-          : [...prev, data]);
+        const updated = editingSub
+          ? subs.map(s => s.id === editingSub.id ? data : s)
+          : [...subs, data];
+        setSubs(updated);
+        scheduleSubscriptionReminders(updated).catch(() => {});
         showToast(editingSub ? t('toastSubUpdated') : t('toastSubAdded'));
         setShowModal(false);
       }

@@ -8,6 +8,7 @@ import { useCurrency } from '../../context/CurrencyContext';
 import { useCategories } from '../../context/CategoriesContext';
 import { useToast } from '../../context/ToastContext';
 import { API, authFetch, queuedAuthFetch } from '../../utils/api';
+import { notifyBudgetExceeded, notifyBudgetWarning } from '../../utils/notifications';
 import { fmt } from '../../utils/format';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
@@ -44,6 +45,21 @@ export default function BudgetsScreen() {
   const getSpent = (cat) => transactions
     .filter(tx => tx.type === 'expense' && tx.category === cat && (tx.date || '').slice(0, 7) === thisMonthPrefix)
     .reduce((s, tx) => s + parseFloat(tx.amount || 0), 0);
+
+  useEffect(() => {
+    if (!budgets.length || !transactions.length) return;
+    budgets.forEach(b => {
+      const spent = getSpent(b.category);
+      const limit = parseFloat(b.amount);
+      const pct = Math.round((spent / limit) * 100);
+      const label = t(b.category) || b.category;
+      if (pct >= 100) {
+        notifyBudgetExceeded(label, spent, limit, symbol).catch(() => {});
+      } else if (pct >= 80) {
+        notifyBudgetWarning(label, pct, symbol, spent, limit).catch(() => {});
+      }
+    });
+  }, [transactions]);
 
   const openAdd = () => {
     setEditingBudget(null);

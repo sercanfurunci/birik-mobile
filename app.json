@@ -27,6 +27,15 @@
       },
       "edgeToEdgeEnabled": true
     },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/birik-icon.png",
+          "color": "#22c55e"
+        }
+      ]
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     }

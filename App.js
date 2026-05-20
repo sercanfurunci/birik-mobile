@@ -13,6 +13,7 @@ import AppNavigator from './src/navigation/AppNavigator';
 import ToastContainer from './src/components/Toast';
 import OfflineBanner from './src/components/OfflineBanner';
 import Splash from './src/components/Splash';
+import { requestNotificationPermission } from './src/utils/notifications';
 
 const MIN_SPLASH_MS = 2600;
 
@@ -25,6 +26,10 @@ function AppContent() {
   useEffect(() => {
     const t = setTimeout(() => setMinElapsed(true), MIN_SPLASH_MS);
     return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    requestNotificationPermission();
   }, []);
 
   const handleSaveCategories = async (cats) => {
