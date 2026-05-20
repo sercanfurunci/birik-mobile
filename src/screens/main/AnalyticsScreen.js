@@ -159,6 +159,33 @@ export default function AnalyticsScreen() {
       .slice(0, 5);
   }, [expenses, transactions, fromStr, toStr]);
 
+  // 6-month monthly trend (always off the full transaction set)
+  const monthlyData = useMemo(() => {
+    const now = new Date();
+    const months = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({
+        ym: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+        label: d.toLocaleDateString(lang === 'tr' ? 'tr-TR' : 'en-US', { month: 'short' }),
+        inc: 0,
+        exp: 0,
+      });
+    }
+    transactions.forEach(tx => {
+      const ym = (tx.date || '').slice(0, 7);
+      const entry = months.find(m => m.ym === ym);
+      if (!entry) return;
+      const amt = parseFloat(tx.amount || 0);
+      if (tx.type === 'income') entry.inc += amt;
+      else entry.exp += amt;
+    });
+    return months;
+  }, [transactions, lang]);
+
+  const maxMonthly = Math.max(...monthlyData.flatMap(m => [m.inc, m.exp]), 1);
+  const hasMonthlyData = monthlyData.some(m => m.inc > 0 || m.exp > 0);
+
   const hasData = transactions.length > 0;
   const txCount = filtered.length;
 
@@ -226,6 +253,59 @@ export default function AnalyticsScreen() {
                 </Card>
               )}
             </View>
+
+            {/* 6-month monthly overview */}
+            {hasMonthlyData && (
+              <>
+                <Text style={[s.sectionTitle, { color: colors.text3 }]}>{t('monthlyOverview').toUpperCase()}</Text>
+                <Card style={[s.chartCard, { borderColor: colors.border }]}>
+                  <View style={{ flexDirection: 'row', gap: 16, marginBottom: 12 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <View style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: colors.red }} />
+                      <Text style={{ fontSize: 11, color: colors.text3 }}>{t('expenses')}</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <View style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: colors.green }} />
+                      <Text style={{ fontSize: 11, color: colors.text3 }}>{t('income')}</Text>
+                    </View>
+                  </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+                    {monthlyData.map((m, i) => {
+                      const CHART_H = 90;
+                      const expH = m.exp > 0 ? Math.max(4, (m.exp / maxMonthly) * CHART_H) : 0;
+                      const incH = m.inc > 0 ? Math.max(4, (m.inc / maxMonthly) * CHART_H) : 0;
+                      const isCurrentMonth = i === 5;
+                      return (
+                        <View key={m.ym} style={{ flex: 1, alignItems: 'center', gap: 4 }}>
+                          <View style={{ height: CHART_H, justifyContent: 'flex-end', flexDirection: 'row', alignItems: 'flex-end', gap: 2 }}>
+                            <View style={{
+                              width: 10, height: expH || 0, borderRadius: 3,
+                              backgroundColor: colors.red, opacity: isCurrentMonth ? 1 : 0.6,
+                            }} />
+                            <View style={{
+                              width: 10, height: incH || 0, borderRadius: 3,
+                              backgroundColor: colors.green, opacity: isCurrentMonth ? 1 : 0.6,
+                            }} />
+                          </View>
+                          <View style={{ height: 1, width: '90%', backgroundColor: colors.border }} />
+                          <Text style={{
+                            fontSize: 10, color: isCurrentMonth ? colors.brand : colors.text3,
+                            fontWeight: isCurrentMonth ? '700' : '500',
+                          }}>
+                            {m.label}
+                          </Text>
+                          {(m.exp > 0 || m.inc > 0) && (
+                            <Text style={{ fontSize: 9, color: colors.text3 }} numberOfLines={1}>
+                              {symbol}{fmt(Math.max(m.exp, m.inc))}
+                            </Text>
+                          )}
+                        </View>
+                      );
+                    })}
+                  </View>
+                </Card>
+              </>
+            )}
 
             {/* Bar chart with tap-to-show */}
             {showBar && (
