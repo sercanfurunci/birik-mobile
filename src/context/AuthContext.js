@@ -57,6 +57,7 @@ export function AuthProvider({ children }) {
 
   const handleAuthSuccess = useCallback(async (user, token) => {
     if (token) await AsyncStorage.setItem('auth_token', token);
+    setPendingBioUser(null);
     setCurrentUser(user);
   }, []);
 
@@ -69,11 +70,17 @@ export function AuthProvider({ children }) {
 
   const handleLogout = useCallback(async () => {
     try { await authFetch(`${API}/auth/logout`, { method: 'POST' }); } catch {}
-    await AsyncStorage.removeItem('auth_token');
+    const bioEnabled = await getBiometricLockEnabled();
+    if (bioEnabled && currentUser) {
+      // Keep token so bio re-login works; show bio button immediately on Login screen
+      setPendingBioUser(currentUser);
+    } else {
+      await AsyncStorage.removeItem('auth_token');
+      setPendingBioUser(null);
+    }
     setCurrentUser(null);
-    setPendingBioUser(null);
     setTransactions([]);
-  }, []);
+  }, [currentUser]);
 
   const updateUser = useCallback((updates) => {
     setCurrentUser(prev => ({ ...prev, ...updates }));
