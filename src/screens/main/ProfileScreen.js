@@ -125,7 +125,7 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={s.safe}>
+    <SafeAreaView style={s.safe} edges={['top', 'left', 'right']}>
       <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
 
         {/* Avatar header */}

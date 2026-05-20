@@ -1,4 +1,5 @@
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, StatusBar, Modal, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import { useTheme } from '../../context/ThemeContext';
@@ -29,6 +30,7 @@ export default function BudgetsScreen() {
   const [editingBudget, setEditingBudget] = useState(null);
   const [selCategory, setSelCategory] = useState('food');
   const [limitAmount, setLimitAmount] = useState('');
+  const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -65,6 +67,7 @@ export default function BudgetsScreen() {
     setEditingBudget(null);
     setSelCategory('food');
     setLimitAmount('');
+    setNotes('');
     setShowModal(true);
   };
 
@@ -72,20 +75,19 @@ export default function BudgetsScreen() {
     setEditingBudget(b);
     setSelCategory(b.category);
     setLimitAmount(String(b.amount));
+    setNotes(b.notes || '');
     setShowModal(true);
   };
 
   const handleSave = async () => {
-    const amt = parseFloat(limitAmount);
+    const amt = parseFloat(limitAmount.replace(',', '.'));
     if (!isFinite(amt) || amt <= 0) return;
     setSaving(true);
     try {
-      const url = editingBudget ? `${API}/budgets/${editingBudget.id}` : `${API}/budgets`;
-      const method = editingBudget ? 'PUT' : 'POST';
-      const res = await queuedAuthFetch(url, {
-        method,
+      const res = await queuedAuthFetch(`${API}/budgets`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category: selCategory, amount: amt }),
+        body: JSON.stringify({ category: selCategory, amount: amt, notes: notes.trim() || null }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -94,7 +96,12 @@ export default function BudgetsScreen() {
           : [...prev, data]);
         showToast(t('toastBudgetSaved'));
         setShowModal(false);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        showToast(err.error || err.message || t('errorGeneric'));
       }
+    } catch {
+      showToast(t('errorGeneric'));
     } finally {
       setSaving(false);
     }
@@ -120,7 +127,7 @@ export default function BudgetsScreen() {
   const totalSpent = budgets.reduce((s, b) => s + getSpent(b.category), 0);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top', 'left', 'right']}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.bg} />
 
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
@@ -213,6 +220,7 @@ export default function BudgetsScreen() {
                   <View style={[styles.progressFill, { width: `${pct}%`, backgroundColor: barColor }]} />
                 </View>
                 <Text style={[styles.pctLabel, { color: colors.text3 }]}>{pct.toFixed(0)}%</Text>
+                {b.notes ? <Text style={[styles.noteText, { color: colors.text3 }]} numberOfLines={2}>{b.notes}</Text> : null}
               </Card>
             );
           })
@@ -220,15 +228,16 @@ export default function BudgetsScreen() {
       </ScrollView>
 
       <Modal visible={showModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowModal(false)}>
-        <View style={{ flex: 1, backgroundColor: colors.bg }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
             <ScrollView contentContainerStyle={styles.modal} keyboardShouldPersistTaps="handled">
+              <View style={[styles.dragHandle, { backgroundColor: colors.border }]} />
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, { color: colors.text1 }]}>
                   {editingBudget ? t('budgetEdit') : t('budgetAdd')}
                 </Text>
-                <TouchableOpacity onPress={() => setShowModal(false)}>
-                  <Text style={{ color: colors.text3, fontSize: 20 }}>✕</Text>
+                <TouchableOpacity onPress={() => setShowModal(false)} style={[styles.closeBtn, { backgroundColor: colors.surface2 }]}>
+                  <Ionicons name="close" size={18} color={colors.text2} />
                 </TouchableOpacity>
               </View>
 
@@ -241,12 +250,13 @@ export default function BudgetsScreen() {
                 style={{ marginBottom: 20 }}
               />
 
-              <Input label={t('budgetMonthlyLimit')} value={limitAmount} onChangeText={setLimitAmount} placeholder="0.00" keyboardType="decimal-pad" autoCapitalize="none" style={{ marginBottom: 24 }} />
+              <Input label={t('budgetMonthlyLimit')} value={limitAmount} onChangeText={setLimitAmount} placeholder="0.00" keyboardType="decimal-pad" autoCapitalize="none" style={{ marginBottom: 16 }} />
+              <Input label={`${t('budgetNotes')} (${t('goalOptional')})`} value={notes} onChangeText={setNotes} placeholder={t('budgetNotesPlaceholder')} multiline numberOfLines={2} style={{ marginBottom: 24 }} />
 
               <Button title={saving ? t('savingBtn') : t('saveBtn')} onPress={handleSave} loading={saving} disabled={!limitAmount || parseFloat(limitAmount) <= 0} />
             </ScrollView>
           </KeyboardAvoidingView>
-        </View>
+        </SafeAreaView>
       </Modal>
     </SafeAreaView>
   );
@@ -277,9 +287,12 @@ const styles = StyleSheet.create({
   progressTrack: { height: 6, borderRadius: 3, overflow: 'hidden', marginBottom: 4 },
   progressFill: { height: '100%', borderRadius: 3 },
   pctLabel: { fontSize: 11, textAlign: 'right' },
-  modal: { padding: 20, paddingBottom: 40 },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  modalTitle: { fontSize: 18, fontWeight: '700' },
-  fieldLabel: { fontSize: 11, fontWeight: '600', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 8 },
+  noteText: { fontSize: 12, marginTop: 8 },
+  modal: { padding: 24, paddingBottom: 48 },
+  dragHandle: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: 24 },
+  closeBtn: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 },
+  modalTitle: { fontSize: 20, fontWeight: '700' },
+  fieldLabel: { fontSize: 12, fontWeight: '600', letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 8 },
   chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1 },
 });

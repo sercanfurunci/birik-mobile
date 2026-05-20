@@ -14,6 +14,7 @@ import { scheduleRecurringReminders } from '../../utils/notifications';
 import { useAuth } from '../../context/AuthContext';
 import { BASE_CATS, INCOME_ONLY_CATS } from '../../constants/categories';
 import Dropdown from '../../components/Dropdown';
+import DatePickerField from '../../components/DatePickerField';
 
 const EXPENSE_CATS = BASE_CATS.filter(c => !INCOME_ONLY_CATS.includes(c));
 const INCOME_CATS = INCOME_ONLY_CATS;
@@ -219,7 +220,7 @@ export default function RecurringScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={s.safe}>
+    <SafeAreaView style={s.safe} edges={['top', 'left', 'right']}>
       {/* Header */}
       <View style={s.header}>
         <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()}>
@@ -257,10 +258,11 @@ export default function RecurringScreen({ navigation }) {
       <Modal visible={showModal} transparent animationType="slide">
         <View style={s.modalOverlay}>
           <View style={s.modalBox}>
+            <View style={[s.dragHandle, { backgroundColor: colors.border }]} />
             <View style={s.modalHeader}>
               <Text style={s.modalTitle}>{editingRule ? t('recEdit') : t('recAdd')}</Text>
-              <TouchableOpacity onPress={() => setShowModal(false)}>
-                <Ionicons name="close" size={22} color={colors.text2} />
+              <TouchableOpacity onPress={() => setShowModal(false)} style={[s.closeBtn, { backgroundColor: colors.surface2 }]}>
+                <Ionicons name="close" size={18} color={colors.text2} />
               </TouchableOpacity>
             </View>
 
@@ -350,25 +352,8 @@ export default function RecurringScreen({ navigation }) {
                 </>
               )}
 
-              {/* Start date */}
-              <Text style={s.fieldLabel}>{t('recStartDate')}</Text>
-              <TextInput
-                style={s.input}
-                value={form.start_date}
-                onChangeText={v => setForm(f => ({ ...f, start_date: v }))}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={colors.text3}
-              />
-
-              {/* End date */}
-              <Text style={s.fieldLabel}>{t('recEndDate')}</Text>
-              <TextInput
-                style={s.input}
-                value={form.end_date}
-                onChangeText={v => setForm(f => ({ ...f, end_date: v }))}
-                placeholder={'YYYY-MM-DD (' + t('goalOptional') + ')'}
-                placeholderTextColor={colors.text3}
-              />
+              <DatePickerField label={t('recStartDate')} value={form.start_date} onChange={v => setForm(f => ({ ...f, start_date: v }))} style={{ marginBottom: 14 }} />
+              <DatePickerField label={`${t('recEndDate')} (${t('goalOptional')})`} value={form.end_date} onChange={v => setForm(f => ({ ...f, end_date: v }))} style={{ marginBottom: 14 }} />
 
               {/* Active toggle */}
               <View style={s.activeRow}>
@@ -467,13 +452,15 @@ const makeStyles = (colors) => StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalBox: {
-    backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    padding: 20, maxHeight: '90%', borderWidth: 1, borderColor: colors.border,
+    backgroundColor: colors.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    padding: 24, paddingTop: 16, maxHeight: '90%', borderWidth: 1, borderColor: colors.border,
   },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: colors.text1 },
+  dragHandle: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: 20 },
+  closeBtn: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
+  modalTitle: { fontSize: 20, fontWeight: '700', color: colors.text1 },
 
-  fieldLabel: { fontSize: 13, fontWeight: '600', color: colors.text2, marginBottom: 6, marginTop: 2 },
+  fieldLabel: { fontSize: 12, fontWeight: '600', color: colors.text2, letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 8, marginTop: 4 },
   input: {
     borderWidth: 1, borderColor: colors.border, borderRadius: 12,
     paddingHorizontal: 12, paddingVertical: 11, color: colors.text1,

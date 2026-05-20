@@ -20,6 +20,7 @@ import Card from '../../components/Card';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
 import Dropdown from '../../components/Dropdown';
+import DatePickerField from '../../components/DatePickerField';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -529,7 +530,7 @@ export default function SubscriptionsScreen() {
   }, [subs, filterCat]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top', 'left', 'right']}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.bg} />
 
       {/* Header */}
@@ -658,15 +659,16 @@ export default function SubscriptionsScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setShowModal(false)}
       >
-        <View style={{ flex: 1, backgroundColor: colors.bg }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
             <ScrollView contentContainerStyle={styles.modal} keyboardShouldPersistTaps="handled">
+              <View style={[styles.dragHandle, { backgroundColor: colors.border }]} />
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, { color: colors.text1 }]}>
                   {editingSub ? t('subEdit') : t('subAdd')}
                 </Text>
-                <TouchableOpacity onPress={() => setShowModal(false)}>
-                  <Ionicons name="close" size={22} color={colors.text3} />
+                <TouchableOpacity onPress={() => setShowModal(false)} style={[styles.closeBtn, { backgroundColor: colors.surface2 }]}>
+                  <Ionicons name="close" size={18} color={colors.text2} />
                 </TouchableOpacity>
               </View>
 
@@ -705,10 +707,8 @@ export default function SubscriptionsScreen() {
                 options={CATEGORIES.map(c => ({ value: c, label: `${CATEGORY_EMOJI[c]} ${t(`subCat_${c}`)}` }))}
               />
 
-              <Input label={t('subStartedAt')} value={subStarted} onChangeText={setSubStarted}
-                placeholder="YYYY-MM-DD" autoCapitalize="none" style={{ marginBottom: 16 }} />
-              <Input label={t('subNextBilling')} value={subNextBilling} onChangeText={setSubNextBilling}
-                placeholder="YYYY-MM-DD" autoCapitalize="none" style={{ marginBottom: 16 }} />
+              <DatePickerField label={t('subStartedAt')} value={subStarted} onChange={setSubStarted} style={{ marginBottom: 16 }} />
+              <DatePickerField label={t('subNextBilling')} value={subNextBilling} onChange={setSubNextBilling} style={{ marginBottom: 16 }} />
 
               {/* Reminder */}
               <Dropdown
@@ -752,7 +752,7 @@ export default function SubscriptionsScreen() {
               />
             </ScrollView>
           </KeyboardAvoidingView>
-        </View>
+        </SafeAreaView>
       </Modal>
     </SafeAreaView>
   );
@@ -800,10 +800,12 @@ const styles = StyleSheet.create({
   detailBtn: { flex: 1, height: 44, borderRadius: 10, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
   notes: { fontSize: 13, paddingHorizontal: 16, paddingBottom: 16, paddingTop: 12, borderTopWidth: 1 },
   // Form
-  modal: { padding: 20, paddingBottom: 40 },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  modalTitle: { fontSize: 18, fontWeight: '700' },
-  fieldLabel: { fontSize: 11, fontWeight: '600', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 8 },
+  modal: { padding: 24, paddingBottom: 48 },
+  dragHandle: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: 24 },
+  closeBtn: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 },
+  modalTitle: { fontSize: 20, fontWeight: '700' },
+  fieldLabel: { fontSize: 12, fontWeight: '600', letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 8 },
   chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1, alignItems: 'center' },
   autoChargeRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderRadius: 12, borderWidth: 1, marginBottom: 16 },
   autoChargeLabel: { fontSize: 14, fontWeight: '600', marginBottom: 2 },

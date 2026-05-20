@@ -35,7 +35,8 @@
           "icon": "./assets/birik-icon.png",
           "color": "#22c55e"
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "web": {
       "favicon": "./assets/favicon.png"

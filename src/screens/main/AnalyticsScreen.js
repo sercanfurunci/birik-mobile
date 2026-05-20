@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, StyleSheet, StatusBar, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, StatusBar, TouchableOpacity, Pressable, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useMemo, useRef, useEffect } from 'react';
@@ -80,17 +80,20 @@ export default function AnalyticsScreen() {
   }, [expenses]);
 
   const barData = useMemo(() => {
-    const expByDay = {}, incByDay = {};
+    const expByDay = {}, incByDay = {}, txsByDay = {};
     filtered.forEach(tx => {
       const d = (tx.date || '').slice(0, 10);
       if (tx.type === 'expense') expByDay[d] = (expByDay[d] || 0) + parseFloat(tx.amount || 0);
       else incByDay[d] = (incByDay[d] || 0) + parseFloat(tx.amount || 0);
+      txsByDay[d] = txsByDay[d] || [];
+      txsByDay[d].push(tx);
     });
     return dayStrs.map(d => ({
       d,
       label: String(parseInt(d.slice(8))),
       exp: expByDay[d] || 0,
       inc: incByDay[d] || 0,
+      txs: txsByDay[d] || [],
     }));
   }, [filtered, dayStrs]);
 
@@ -190,7 +193,7 @@ export default function AnalyticsScreen() {
   const txCount = filtered.length;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top', 'left', 'right']}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.bg} />
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
         <Text style={[s.pageTitle, { color: colors.text1 }]}>{t('navAnalytics')}</Text>
@@ -269,14 +272,15 @@ export default function AnalyticsScreen() {
                       <Text style={{ fontSize: 11, color: colors.text3 }}>{t('income')}</Text>
                     </View>
                   </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                     {monthlyData.map((m, i) => {
                       const CHART_H = 90;
                       const expH = m.exp > 0 ? Math.max(4, (m.exp / maxMonthly) * CHART_H) : 0;
                       const incH = m.inc > 0 ? Math.max(4, (m.inc / maxMonthly) * CHART_H) : 0;
                       const isCurrentMonth = i === 5;
+                      const hasData = m.exp > 0 || m.inc > 0;
                       return (
-                        <View key={m.ym} style={{ flex: 1, alignItems: 'center', gap: 4 }}>
+                        <View key={m.ym} style={{ flex: 1, alignItems: 'center' }}>
                           <View style={{ height: CHART_H, justifyContent: 'flex-end', flexDirection: 'row', alignItems: 'flex-end', gap: 2 }}>
                             <View style={{
                               width: 10, height: expH || 0, borderRadius: 3,
@@ -287,18 +291,16 @@ export default function AnalyticsScreen() {
                               backgroundColor: colors.green, opacity: isCurrentMonth ? 1 : 0.6,
                             }} />
                           </View>
-                          <View style={{ height: 1, width: '90%', backgroundColor: colors.border }} />
+                          <View style={{ height: 1, width: '90%', backgroundColor: colors.border, marginVertical: 4 }} />
                           <Text style={{
                             fontSize: 10, color: isCurrentMonth ? colors.brand : colors.text3,
-                            fontWeight: isCurrentMonth ? '700' : '500',
+                            fontWeight: isCurrentMonth ? '700' : '500', marginBottom: 2,
                           }}>
                             {m.label}
                           </Text>
-                          {(m.exp > 0 || m.inc > 0) && (
-                            <Text style={{ fontSize: 9, color: colors.text3 }} numberOfLines={1}>
-                              {symbol}{fmt(Math.max(m.exp, m.inc))}
-                            </Text>
-                          )}
+                          <Text style={{ fontSize: 9, color: colors.text3, height: 13 }} numberOfLines={1}>
+                            {hasData ? `${symbol}${fmt(Math.max(m.exp, m.inc))}` : ''}
+                          </Text>
                         </View>
                       );
                     })}
@@ -311,6 +313,7 @@ export default function AnalyticsScreen() {
             {showBar && (
               <>
                 <Text style={[s.sectionTitle, { color: colors.text3 }]}>{t('spendingTrends').toUpperCase()}</Text>
+                <Pressable onPress={() => setSelectedBar(null)}>
                 <Card style={[s.chartCard, { borderColor: colors.border }]}>
                   <View style={{ flexDirection: 'row', gap: 16, marginBottom: 10 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
@@ -328,6 +331,7 @@ export default function AnalyticsScreen() {
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     onContentSizeChange={() => trendScrollRef.current?.scrollToEnd({ animated: false })}
+                    onScrollBeginDrag={() => setSelectedBar(null)}
                   >
                     <View style={{ paddingHorizontal: 4 }}>
                       {/* Bars row */}
@@ -388,24 +392,39 @@ export default function AnalyticsScreen() {
 
                   {selectedBar && (
                     <View style={[s.tooltip, { borderTopColor: colors.border, backgroundColor: colors.surface2 }]}>
-                      <Text style={[s.tooltipDate, { color: colors.text1 }]}>
-                        {selectedBar.d}
-                      </Text>
-                      {selectedBar.inc > 0 && (
-                        <View style={s.tooltipRow}>
-                          <Text style={{ fontSize: 12, color: colors.text3 }}>{t('income')}</Text>
-                          <Text style={{ fontSize: 12, fontWeight: '700', color: colors.green }}>+{symbol}{fmt(selectedBar.inc)}</Text>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                        <Text style={[s.tooltipDate, { color: colors.text1 }]}>{selectedBar.d}</Text>
+                        <View style={{ flexDirection: 'row', gap: 12 }}>
+                          {selectedBar.inc > 0 && (
+                            <Text style={{ fontSize: 12, fontWeight: '700', color: colors.green }}>+{symbol}{fmt(selectedBar.inc)}</Text>
+                          )}
+                          {selectedBar.exp > 0 && (
+                            <Text style={{ fontSize: 12, fontWeight: '700', color: colors.red }}>-{symbol}{fmt(selectedBar.exp)}</Text>
+                          )}
                         </View>
-                      )}
-                      {selectedBar.exp > 0 && (
-                        <View style={s.tooltipRow}>
-                          <Text style={{ fontSize: 12, color: colors.text3 }}>{t('expenses')}</Text>
-                          <Text style={{ fontSize: 12, fontWeight: '700', color: colors.red }}>-{symbol}{fmt(selectedBar.exp)}</Text>
-                        </View>
+                      </View>
+                      {selectedBar.txs.length === 0 ? (
+                        <Text style={{ fontSize: 12, color: colors.text3 }}>{t('dailyDistEmpty')}</Text>
+                      ) : (
+                        selectedBar.txs
+                          .slice()
+                          .sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount))
+                          .map(tx => (
+                            <View key={tx.id} style={s.tooltipTxRow}>
+                              <View style={[s.tooltipDot, { backgroundColor: getCatColor(tx.category, tx.type) }]} />
+                              <Text style={{ flex: 1, fontSize: 12, color: colors.text2 }} numberOfLines={1}>
+                                {tx.description || t(tx.category)}
+                              </Text>
+                              <Text style={{ fontSize: 12, fontWeight: '600', color: tx.type === 'income' ? colors.green : colors.red }}>
+                                {tx.type === 'income' ? '+' : '-'}{symbol}{fmt(tx.amount)}
+                              </Text>
+                            </View>
+                          ))
                       )}
                     </View>
                   )}
                 </Card>
+                </Pressable>
               </>
             )}
 
@@ -509,8 +528,9 @@ const s = StyleSheet.create({
   moverRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 12 },
   moverSub: { fontSize: 11, marginTop: 2 },
   tooltip: { marginTop: 10, padding: 12, borderTopWidth: 1, borderRadius: 8, marginHorizontal: -2 },
-  tooltipDate: { fontSize: 12, fontWeight: '700', marginBottom: 6 },
-  tooltipRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2 },
+  tooltipDate: { fontSize: 12, fontWeight: '700' },
+  tooltipTxRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 3 },
+  tooltipDot: { width: 6, height: 6, borderRadius: 3, flexShrink: 0 },
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 80 },
   emptyText: { fontSize: 15 },
 });

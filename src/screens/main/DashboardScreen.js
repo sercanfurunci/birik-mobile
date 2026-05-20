@@ -184,7 +184,7 @@ export default function DashboardScreen({ navigation }) {
   const totalCount = transactions.length;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top', 'left', 'right']}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.bg} />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} onScrollBeginDrag={() => setSelectedDay(null)}>
         {/* Header — logo + app name + username, matches web */}
@@ -345,7 +345,7 @@ export default function DashboardScreen({ navigation }) {
             <Pressable onPress={() => setSelectedDay(null)}>
             <Card style={[styles.chartCard, { borderColor: colors.border }]}>
               <Text style={[styles.chartHint, { color: colors.text3 }]}>{t('dailyDistTapHint')}</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }} onScrollBeginDrag={() => setSelectedDay(null)}>
                 <View style={styles.chartRow}>
                   {dailyData.map(d => {
                     const barH = d.net !== 0 ? Math.max(4, (Math.abs(d.net) / maxDailyAbs) * 80) : 2;

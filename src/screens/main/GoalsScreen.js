@@ -1,4 +1,5 @@
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, StatusBar, Modal, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import { useTheme } from '../../context/ThemeContext';
@@ -12,6 +13,7 @@ import { fmt } from '../../utils/format';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
+import DatePickerField from '../../components/DatePickerField';
 
 const EMOJIS = ['🎯', '✈️', '🏠', '🚗', '💍', '📱', '🎓', '💰', '🏖️', '🎮', '🏋️', '🎸'];
 
@@ -85,7 +87,12 @@ export default function GoalsScreen() {
         const saved = parseFloat(data.saved_amount) || 0;
         const pct = target > 0 ? Math.round((saved / target) * 100) : 0;
         notifyGoalProgress(data.name, data.id, pct).catch(() => {});
+      } else {
+        const err = await res.json().catch(() => ({}));
+        showToast(err.error || err.message || t('errorGeneric'));
       }
+    } catch {
+      showToast(t('errorGeneric'));
     } finally {
       setSaving(false);
     }
@@ -122,7 +129,7 @@ export default function GoalsScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top', 'left', 'right']}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.bg} />
 
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
@@ -227,15 +234,16 @@ export default function GoalsScreen() {
       </ScrollView>
 
       <Modal visible={showModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowModal(false)}>
-        <View style={{ flex: 1, backgroundColor: colors.bg }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
             <ScrollView contentContainerStyle={styles.modal} keyboardShouldPersistTaps="handled">
+              <View style={[styles.dragHandle, { backgroundColor: colors.border }]} />
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, { color: colors.text1 }]}>
                   {editingGoal ? t('goalEdit') : t('goalAdd')}
                 </Text>
-                <TouchableOpacity onPress={() => setShowModal(false)}>
-                  <Text style={{ color: colors.text3, fontSize: 20 }}>✕</Text>
+                <TouchableOpacity onPress={() => setShowModal(false)} style={[styles.closeBtn, { backgroundColor: colors.surface2 }]}>
+                  <Ionicons name="close" size={18} color={colors.text2} />
                 </TouchableOpacity>
               </View>
 
@@ -252,12 +260,12 @@ export default function GoalsScreen() {
               <Input label={t('goalName')} value={goalName} onChangeText={setGoalName} placeholder={t('goalNamePlaceholder')} style={{ marginBottom: 16 }} />
               <Input label={t('goalTarget')} value={goalTarget} onChangeText={setGoalTarget} placeholder="0.00" keyboardType="decimal-pad" autoCapitalize="none" style={{ marginBottom: 16 }} />
               <Input label={t('goalSaved')} value={goalSaved} onChangeText={setGoalSaved} placeholder="0.00" keyboardType="decimal-pad" autoCapitalize="none" style={{ marginBottom: 16 }} />
-              <Input label={`${t('goalTargetDate')} (${t('goalOptional')})`} value={goalDate} onChangeText={setGoalDate} placeholder="YYYY-MM-DD" autoCapitalize="none" style={{ marginBottom: 24 }} />
+              <DatePickerField label={`${t('goalTargetDate')} (${t('goalOptional')})`} value={goalDate} onChange={setGoalDate} style={{ marginBottom: 24 }} />
 
               <Button title={saving ? t('savingBtn') : t('saveBtn')} onPress={handleSave} loading={saving} disabled={!goalName.trim() || !goalTarget} />
             </ScrollView>
           </KeyboardAvoidingView>
-        </View>
+        </SafeAreaView>
       </Modal>
     </SafeAreaView>
   );
@@ -288,10 +296,12 @@ const styles = StyleSheet.create({
   progressFill: { height: '100%', borderRadius: 3 },
   remaining: { fontSize: 12, marginBottom: 12 },
   goalActions: { flexDirection: 'row', gap: 16 },
-  modal: { padding: 20, paddingBottom: 40 },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  modalTitle: { fontSize: 18, fontWeight: '700' },
-  fieldLabel: { fontSize: 11, fontWeight: '600', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 8 },
+  modal: { padding: 24, paddingBottom: 48 },
+  dragHandle: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: 24 },
+  closeBtn: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 },
+  modalTitle: { fontSize: 20, fontWeight: '700' },
+  fieldLabel: { fontSize: 12, fontWeight: '600', letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 8 },
   emojiGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
   emojiBtn: { width: 48, height: 48, borderRadius: 12, justifyContent: 'center', alignItems: 'center', backgroundColor: '#00000008' },
 });

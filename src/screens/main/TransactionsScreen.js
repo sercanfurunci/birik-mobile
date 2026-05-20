@@ -8,6 +8,8 @@ import { useState, useMemo } from 'react';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
 import { useTheme } from '../../context/ThemeContext';
 import { useLang } from '../../context/LangContext';
 import { useAuth } from '../../context/AuthContext';
@@ -22,6 +24,7 @@ import Button from '../../components/Button';
 import Input from '../../components/Input';
 import Dropdown from '../../components/Dropdown';
 import SwipeableRow from '../../components/SwipeableRow';
+import DatePickerField from '../../components/DatePickerField';
 
 const SORT_OPTIONS = ['dateDesc', 'dateAsc', 'amountDesc', 'amountAsc'];
 
@@ -163,21 +166,31 @@ export default function TransactionsScreen({ navigation }) {
   };
 
   const pickImage = async () => {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) { showToast(t('permissionDenied'), 'error'); return; }
-    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.85 });
-    if (res.canceled) return;
-    const f = res.assets[0];
-    await uploadFile(f.uri, 'statement.jpg', f.mimeType || 'image/jpeg');
+    try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) { showToast(t('permissionDenied'), 'error'); return; }
+      setShowImportModal(false);
+      await new Promise(r => setTimeout(r, 400));
+      const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.85 });
+      if (res.canceled) return;
+      const f = res.assets[0];
+      await uploadFile(f.uri, 'statement.jpg', f.mimeType || 'image/jpeg');
+    } catch (e) { showToast(t('serverError'), 'error'); }
   };
 
   const takePhoto = async () => {
-    const perm = await ImagePicker.requestCameraPermissionsAsync();
-    if (!perm.granted) { showToast(t('permissionDenied'), 'error'); return; }
-    const res = await ImagePicker.launchCameraAsync({ quality: 0.9 });
-    if (res.canceled) return;
-    const f = res.assets[0];
-    await uploadFile(f.uri, 'statement.jpg', f.mimeType || 'image/jpeg');
+    try {
+      const perm = await ImagePicker.requestCameraPermissionsAsync();
+      if (!perm.granted) { showToast(t('permissionDenied'), 'error'); return; }
+      setShowImportModal(false);
+      await new Promise(r => setTimeout(r, 500));
+      const res = await ImagePicker.launchCameraAsync({ quality: 0.9 });
+      if (!res || res.canceled) return;
+      const f = res.assets?.[0];
+      if (!f) return;
+      setShowImportModal(true);
+      await uploadFile(f.uri, 'statement.jpg', f.mimeType || 'image/jpeg');
+    } catch (e) { showToast(String(e?.message || e), 'error'); }
   };
 
   const handleBulkImport = async () => {
@@ -224,10 +237,55 @@ export default function TransactionsScreen({ navigation }) {
     else if (sortBy === 'amountDesc') list.sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount));
     else if (sortBy === 'amountAsc') list.sort((a, b) => parseFloat(a.amount) - parseFloat(b.amount));
     return list;
-  }, [transactions, search, filterType, filterCat, sortBy]);
+  }, [transactions, search, filterType, filterCat, sortBy, dateFrom, dateTo]);
+
+  const balanceMap = useMemo(() => {
+    const sorted = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date) || a.id - b.id);
+    const map = {};
+    let bal = 0;
+    for (const tx of sorted) {
+      bal += tx.type === 'income' ? parseFloat(tx.amount || 0) : -parseFloat(tx.amount || 0);
+      map[tx.id] = bal;
+    }
+    return map;
+  }, [transactions]);
+
+  const handleExport = async () => {
+    try {
+      if (filtered.length === 0) return;
+      const escape = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      const rows = [
+        ['Date', 'Description', 'Category', 'Type', 'Amount'].map(escape).join(','),
+        ...filtered.map(tx => [
+          (tx.date ?? '').slice(0, 10),
+          tx.description ?? '',
+          t(tx.category),
+          tx.type,
+          (tx.type === 'expense' ? '-' : '') + parseFloat(tx.amount || 0).toFixed(2),
+        ].map(escape).join(',')),
+      ];
+      const csv = '\uFEFF' + rows.join('\r\n');
+      const fileName = `birik_${new Date().toISOString().slice(0, 10)}.csv`;
+      if (Platform.OS === 'android') {
+        const perm = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync(
+          'content://com.android.externalstorage.documents/tree/primary%3ADownload'
+        );
+        if (!perm.granted) return;
+        const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(perm.directoryUri, fileName, 'text/csv');
+        await FileSystem.writeAsStringAsync(fileUri, csv, { encoding: FileSystem.EncodingType.UTF8 });
+        showToast(t('exportCsvToast'));
+      } else {
+        const path = FileSystem.cacheDirectory + fileName;
+        await FileSystem.writeAsStringAsync(path, csv, { encoding: FileSystem.EncodingType.UTF8 });
+        await Sharing.shareAsync(path, { mimeType: 'text/csv', UTI: 'public.comma-separated-values-text', dialogTitle: fileName });
+      }
+    } catch (e) {
+      showToast(String(e?.message || e));
+    }
+  };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top', 'left', 'right']}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.bg} />
 
       {/* Header */}
@@ -239,6 +297,9 @@ export default function TransactionsScreen({ navigation }) {
           </TouchableOpacity>
           <TouchableOpacity onPress={() => { setImportPreview(null); setShowImportModal(true); }} style={[styles.addBtn, { backgroundColor: colors.surface2, borderWidth: 1, borderColor: colors.border }]}>
             <Ionicons name="scan-outline" size={18} color={colors.text2} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleExport} disabled={filtered.length === 0} style={[styles.addBtn, { backgroundColor: colors.surface2, borderWidth: 1, borderColor: colors.border, opacity: filtered.length === 0 ? 0.4 : 1 }]}>
+            <Ionicons name="download-outline" size={18} color={colors.text2} />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setShowAddModal(true)} style={[styles.addBtn, { backgroundColor: colors.brand }]}>
             <Text style={{ color: '#fff', fontSize: 20, lineHeight: 24 }}>+</Text>
@@ -311,28 +372,8 @@ export default function TransactionsScreen({ navigation }) {
             ]}
           />
           <View style={{ flexDirection: 'row', gap: 10 }}>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.fieldLabel, { color: colors.text3, marginBottom: 6 }]}>{t('dateFrom')}</Text>
-              <TextInput
-                value={dateFrom}
-                onChangeText={setDateFrom}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={colors.text3}
-                style={[styles.dateInput, { color: colors.text1, backgroundColor: colors.bg, borderColor: colors.border }]}
-                autoCapitalize="none"
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.fieldLabel, { color: colors.text3, marginBottom: 6 }]}>{t('dateTo')}</Text>
-              <TextInput
-                value={dateTo}
-                onChangeText={setDateTo}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={colors.text3}
-                style={[styles.dateInput, { color: colors.text1, backgroundColor: colors.bg, borderColor: colors.border }]}
-                autoCapitalize="none"
-              />
-            </View>
+            <DatePickerField label={t('dateFrom')} value={dateFrom} onChange={setDateFrom} style={{ flex: 1 }} />
+            <DatePickerField label={t('dateTo')} value={dateTo} onChange={setDateTo} style={{ flex: 1 }} />
           </View>
         </View>
       )}
@@ -361,9 +402,14 @@ export default function TransactionsScreen({ navigation }) {
                       {formatDate(tx.date)} · {t(tx.category)}
                     </Text>
                   </View>
-                  <Text style={[styles.txAmt, { color: tx.type === 'income' ? colors.green : colors.red }]}>
-                    {tx.type === 'income' ? '+' : '-'}{symbol}{fmt(tx.amount)}
-                  </Text>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={[styles.txAmt, { color: tx.type === 'income' ? colors.green : colors.red }]}>
+                      {tx.type === 'income' ? '+' : '-'}{symbol}{fmt(tx.amount)}
+                    </Text>
+                    <Text style={{ fontSize: 11, color: (balanceMap[tx.id] ?? 0) < 0 ? colors.red : colors.text3, marginTop: 2 }}>
+                      {t('balance')}: {(balanceMap[tx.id] ?? 0) < 0 ? '-' : ''}{symbol}{fmt(Math.abs(balanceMap[tx.id] ?? 0))}
+                    </Text>
+                  </View>
                 </View>
               </TouchableOpacity>
             </SwipeableRow>
@@ -374,13 +420,14 @@ export default function TransactionsScreen({ navigation }) {
 
       {/* Add modal */}
       <Modal visible={showAddModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowAddModal(false)}>
-        <View style={{ flex: 1, backgroundColor: colors.bg }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
             <ScrollView contentContainerStyle={styles.modal} keyboardShouldPersistTaps="handled">
+              <View style={[styles.dragHandle, { backgroundColor: colors.border }]} />
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, { color: colors.text1 }]}>{t('addTransaction')}</Text>
-                <TouchableOpacity onPress={() => setShowAddModal(false)}>
-                  <Text style={{ color: colors.text3, fontSize: 20 }}>✕</Text>
+                <TouchableOpacity onPress={() => setShowAddModal(false)} style={[styles.closeBtn, { backgroundColor: colors.surface2 }]}>
+                  <Ionicons name="close" size={18} color={colors.text2} />
                 </TouchableOpacity>
               </View>
 
@@ -412,58 +459,64 @@ export default function TransactionsScreen({ navigation }) {
               <Button title={adding ? '…' : t('addBtn')} onPress={handleAdd} loading={adding} disabled={!amount || parseFloat(amount) <= 0} />
             </ScrollView>
           </KeyboardAvoidingView>
-        </View>
+        </SafeAreaView>
       </Modal>
 
       {/* Import modal */}
       <Modal visible={showImportModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowImportModal(false)}>
-        <View style={{ flex: 1, backgroundColor: colors.bg }}>
-          <View style={[styles.modalHeader, { padding: 20, paddingBottom: 0 }]}>
-            <Text style={[styles.modalTitle, { color: colors.text1 }]}>{t('importTitle')}</Text>
-            <TouchableOpacity onPress={() => setShowImportModal(false)}>
-              <Ionicons name="close" size={22} color={colors.text3} />
-            </TouchableOpacity>
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+          {/* Header */}
+          <View style={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 0 }}>
+            <View style={[styles.dragHandle, { backgroundColor: colors.border }]} />
+            <View style={[styles.modalHeader, { marginBottom: 0 }]}>
+              <Text style={[styles.modalTitle, { color: colors.text1 }]}>{t('importTitle')}</Text>
+              <TouchableOpacity onPress={() => setShowImportModal(false)} style={[styles.closeBtn, { backgroundColor: colors.surface2 }]}>
+                <Ionicons name="close" size={18} color={colors.text2} />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {!importPreview ? (
-            <ScrollView contentContainerStyle={{ padding: 20, gap: 12 }}>
-              <Text style={{ fontSize: 14, color: colors.text2, lineHeight: 20, marginBottom: 8 }}>
+            <View style={{ flex: 1, padding: 20 }}>
+              {/* Description */}
+              <Text style={{ fontSize: 13, color: colors.text3, lineHeight: 19, marginBottom: 24 }}>
                 {t('importDesc')}
               </Text>
+
               {importing ? (
-                <View style={{ alignItems: 'center', paddingVertical: 40 }}>
+                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                   <ActivityIndicator color={colors.brand} size="large" />
-                  <Text style={{ color: colors.text3, marginTop: 12, fontSize: 14 }}>{t('importAnalyzing')}</Text>
+                  <Text style={{ color: colors.text3, marginTop: 16, fontSize: 14 }}>{t('importAnalyzing')}</Text>
                 </View>
               ) : (
-                <>
-                  <TouchableOpacity style={[styles.importOption, { borderColor: colors.border, backgroundColor: colors.surface }]} onPress={takePhoto}>
-                    <Ionicons name="camera-outline" size={28} color={colors.brand} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text1 }}>{t('importCamera')}</Text>
-                      <Text style={{ fontSize: 12, color: colors.text3, marginTop: 2 }}>{t('importCameraDesc')}</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={16} color={colors.text3} />
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.importOption, { borderColor: colors.border, backgroundColor: colors.surface }]} onPress={pickImage}>
-                    <Ionicons name="image-outline" size={28} color={colors.blue} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text1 }}>{t('importGallery')}</Text>
-                      <Text style={{ fontSize: 12, color: colors.text3, marginTop: 2 }}>{t('importGalleryDesc')}</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={16} color={colors.text3} />
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.importOption, { borderColor: colors.border, backgroundColor: colors.surface }]} onPress={pickDocument}>
-                    <Ionicons name="document-outline" size={28} color={colors.gold} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text1 }}>{t('importPDF')}</Text>
-                      <Text style={{ fontSize: 12, color: colors.text3, marginTop: 2 }}>{t('importPDFDesc')}</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={16} color={colors.text3} />
-                  </TouchableOpacity>
-                </>
+                <View style={[styles.importCard, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+                  {[
+                    { icon: 'camera-outline', color: colors.brand, label: t('importCamera'), desc: t('importCameraDesc'), onPress: takePhoto },
+                    { icon: 'image-outline', color: colors.blue, label: t('importGallery'), desc: t('importGalleryDesc'), onPress: pickImage },
+                    { icon: 'document-outline', color: colors.gold, label: t('importPDF'), desc: t('importPDFDesc'), onPress: pickDocument },
+                  ].map(({ icon, color, label, desc, onPress }, i, arr) => (
+                    <TouchableOpacity
+                      key={icon}
+                      onPress={onPress}
+                      activeOpacity={0.7}
+                      style={[
+                        styles.importRow,
+                        i < arr.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border },
+                      ]}
+                    >
+                      <View style={[styles.importIconWrap, { backgroundColor: `${color}18` }]}>
+                        <Ionicons name={icon} size={22} color={color} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text1 }}>{label}</Text>
+                        <Text style={{ fontSize: 12, color: colors.text3, marginTop: 2 }}>{desc}</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={16} color={colors.text3} />
+                    </TouchableOpacity>
+                  ))}
+                </View>
               )}
-            </ScrollView>
+            </View>
           ) : (
             <View style={{ flex: 1 }}>
               <View style={{ paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border }}>
@@ -518,18 +571,19 @@ export default function TransactionsScreen({ navigation }) {
               </View>
             </View>
           )}
-        </View>
+        </SafeAreaView>
       </Modal>
 
       {/* Edit modal */}
       <Modal visible={!!editingTx} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setEditingTx(null)}>
-        <View style={{ flex: 1, backgroundColor: colors.bg }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
             <ScrollView contentContainerStyle={styles.modal} keyboardShouldPersistTaps="handled">
+              <View style={[styles.dragHandle, { backgroundColor: colors.border }]} />
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, { color: colors.text1 }]}>{t('editBtn')}</Text>
-                <TouchableOpacity onPress={() => setEditingTx(null)}>
-                  <Text style={{ color: colors.text3, fontSize: 20 }}>✕</Text>
+                <TouchableOpacity onPress={() => setEditingTx(null)} style={[styles.closeBtn, { backgroundColor: colors.surface2 }]}>
+                  <Ionicons name="close" size={18} color={colors.text2} />
                 </TouchableOpacity>
               </View>
 
@@ -568,7 +622,7 @@ export default function TransactionsScreen({ navigation }) {
               </TouchableOpacity>
             </ScrollView>
           </KeyboardAvoidingView>
-        </View>
+        </SafeAreaView>
       </Modal>
     </SafeAreaView>
   );
@@ -592,13 +646,16 @@ const styles = StyleSheet.create({
   txDesc: { fontSize: 14, fontWeight: '500', marginBottom: 3 },
   txMeta: { fontSize: 12 },
   txAmt: { fontSize: 14, fontWeight: '700' },
-  modal: { padding: 20, paddingBottom: 40 },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  modalTitle: { fontSize: 18, fontWeight: '700' },
-  fieldLabel: { fontSize: 11, fontWeight: '600', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 8 },
+  modal: { padding: 24, paddingBottom: 48 },
+  dragHandle: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: 24 },
+  closeBtn: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 },
+  modalTitle: { fontSize: 20, fontWeight: '700' },
+  fieldLabel: { fontSize: 12, fontWeight: '600', letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 8 },
   toggle: { flexDirection: 'row', borderRadius: 10, padding: 4, borderWidth: 1, gap: 4, marginBottom: 4 },
   toggleBtn: { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
   catChip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1 },
-  importOption: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: 16, borderWidth: 1 },
-  dateInput: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9, fontSize: 13 },
+  importCard: { borderRadius: 16, borderWidth: 1, overflow: 'hidden', marginBottom: 8 },
+  importRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16 },
+  importIconWrap: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
 });
