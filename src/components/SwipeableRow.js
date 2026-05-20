@@ -1,94 +1,80 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { Animated, PanResponder, View, Dimensions, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { useTheme } from '../context/ThemeContext';
 
 const SCREEN_W = Dimensions.get('window').width;
 const SNAP_W = 76;
 const FULL_THRESHOLD = SCREEN_W * 0.42;
 
 export default function SwipeableRow({ children, onDelete }) {
+  const { colors } = useTheme();
   const translateX = useRef(new Animated.Value(0)).current;
-  const xVal = useRef(0);
-  const triggeredFull = useRef(false);
 
-  useEffect(() => {
-    const id = translateX.addListener(({ value }) => { xVal.current = value; });
-    return () => translateX.removeListener(id);
-  }, []);
+  // Tracks the snapped position between gestures — no stale closure issues
+  const snappedPos = useRef(0);
+
+  // Always have the latest onDelete without recreating PanResponder
+  const onDeleteRef = useRef(onDelete);
+  useEffect(() => { onDeleteRef.current = onDelete; }, [onDelete]);
 
   const spring = (toValue, cb) =>
     Animated.spring(translateX, {
       toValue,
-      useNativeDriver: true,
-      tension: 280,
-      friction: 28,
+      useNativeDriver: false,
+      speed: 16,
+      bounciness: 2,
     }).start(cb);
 
-  const pan = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_, { dx, dy }) =>
-        Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy) * 2,
-      onShouldBlockNativeResponder: () => false,
-      onPanResponderGrant: () => {
-        triggeredFull.current = false;
-        translateX.setOffset(xVal.current);
-        translateX.setValue(0);
-      },
-      onPanResponderMove: (_, { dx }) => {
-        const projected = xVal.current + dx;
-        if (projected > 0) {
-          translateX.setValue(-xVal.current);
-        } else if (projected < -SCREEN_W) {
-          translateX.setValue(-SCREEN_W - xVal.current);
-        } else {
-          translateX.setValue(dx);
-        }
+  const pan = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => false,
+        onMoveShouldSetPanResponder: (_, { dx, dy }) =>
+          Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy) * 2,
+        onPanResponderGrant: () => {
+          // snappedPos.current already holds the correct start position
+          translateX.stopAnimation();
+        },
+        onPanResponderMove: (_, { dx }) => {
+          // dx accumulates from gesture start — add to where we were before gesture
+          const next = Math.max(-SCREEN_W, Math.min(0, snappedPos.current + dx));
+          translateX.setValue(next);
+        },
+        onPanResponderRelease: (_, { dx, vx }) => {
+          const finalPos = snappedPos.current + dx;
 
-        // Haptic hint when crossing full threshold
-        if (!triggeredFull.current && projected < -FULL_THRESHOLD) {
-          triggeredFull.current = true;
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        } else if (triggeredFull.current && projected > -FULL_THRESHOLD) {
-          triggeredFull.current = false;
-        }
-      },
-      onPanResponderRelease: (_, { vx }) => {
-        translateX.flattenOffset();
-        const pos = xVal.current;
-
-        if (pos < -FULL_THRESHOLD || vx < -1.2) {
-          // Full swipe → snap to full red → call delete
-          spring(-SCREEN_W, () => {
-            translateX.setValue(0);
-            onDelete?.();
-          });
-        } else if (pos < -(SNAP_W / 2)) {
-          spring(-SNAP_W);
-        } else {
+          if (finalPos < -FULL_THRESHOLD || vx < -1.2) {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            snappedPos.current = -SCREEN_W;
+            spring(-SCREEN_W, () => {
+              snappedPos.current = 0;
+              translateX.setValue(0);
+              onDeleteRef.current?.();
+            });
+          } else if (finalPos < -(SNAP_W / 2)) {
+            snappedPos.current = -SNAP_W;
+            spring(-SNAP_W);
+          } else {
+            snappedPos.current = 0;
+            spring(0);
+          }
+        },
+        onPanResponderTerminate: () => {
+          snappedPos.current = 0;
           spring(0);
-        }
-      },
-    })
-  ).current;
-
-  // Interpolate the icon's right position: near right when peeking, moves further right when full
-  const iconTranslateX = translateX.interpolate({
-    inputRange: [-SCREEN_W, -SNAP_W, 0],
-    outputRange: [SCREEN_W - 52, 0, 0],
-    extrapolate: 'clamp',
-  });
+        },
+      }),
+    [] // safe: all mutable state in refs
+  );
 
   return (
-    <View style={s.container}>
-      {/* Red background — always full width, behind the row */}
-      <View style={s.bg}>
-        <Animated.View style={{ transform: [{ translateX: iconTranslateX }] }}>
-          <Ionicons name="trash-outline" size={22} color="#fff" />
-        </Animated.View>
+    // backgroundColor = page bg so card border-radius corners don't reveal red
+    <View style={[s.container, { backgroundColor: colors.bg }]}>
+      <View style={s.action}>
+        <Ionicons name="trash-outline" size={22} color="#fff" />
       </View>
-      {/* Sliding row */}
       <Animated.View style={{ transform: [{ translateX }] }} {...pan.panHandlers}>
         {children}
       </Animated.View>
@@ -98,11 +84,11 @@ export default function SwipeableRow({ children, onDelete }) {
 
 const s = StyleSheet.create({
   container: { overflow: 'hidden' },
-  bg: {
+  action: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: '#E04F4F',
     justifyContent: 'center',
     alignItems: 'flex-end',
-    paddingRight: 27,
+    paddingRight: 26,
   },
 });
