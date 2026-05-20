@@ -9,7 +9,8 @@ import { useTheme } from '../../context/ThemeContext';
 import { useLang } from '../../context/LangContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useToast } from '../../context/ToastContext';
-import { API, authFetch } from '../../utils/api';
+import { API, authFetch, queuedAuthFetch } from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
 import { BASE_CATS, INCOME_ONLY_CATS } from '../../constants/categories';
 import Dropdown from '../../components/Dropdown';
 
@@ -42,6 +43,7 @@ export default function RecurringScreen({ navigation }) {
   const { t, formatDate } = useLang();
   const { symbol } = useCurrency();
   const { showToast } = useToast();
+  const { syncVersion } = useAuth();
 
   const [rules, setRules] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -65,7 +67,7 @@ export default function RecurringScreen({ navigation }) {
     setLoading(false);
   }, []);
 
-  useEffect(() => { fetchRules(); }, [fetchRules]);
+  useEffect(() => { fetchRules(); }, [fetchRules, syncVersion]);
 
   const openAdd = () => {
     setEditingRule(null);
@@ -109,13 +111,13 @@ export default function RecurringScreen({ navigation }) {
     try {
       let res;
       if (editingRule) {
-        res = await authFetch(`${API}/recurring/${editingRule.id}`, {
+        res = await queuedAuthFetch(`${API}/recurring/${editingRule.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
       } else {
-        res = await authFetch(`${API}/recurring`, {
+        res = await queuedAuthFetch(`${API}/recurring`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
@@ -139,7 +141,7 @@ export default function RecurringScreen({ navigation }) {
 
   const toggleActive = async (rule) => {
     try {
-      const res = await authFetch(`${API}/recurring/${rule.id}`, {
+      const res = await queuedAuthFetch(`${API}/recurring/${rule.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...rule, is_active: !rule.is_active }),
@@ -153,7 +155,7 @@ export default function RecurringScreen({ navigation }) {
 
   const deleteRule = async (rule) => {
     try {
-      const res = await authFetch(`${API}/recurring/${rule.id}`, { method: 'DELETE' });
+      const res = await queuedAuthFetch(`${API}/recurring/${rule.id}`, { method: 'DELETE' });
       if (res.ok) {
         setRules(prev => prev.filter(r => r.id !== rule.id));
         showToast(t('recDeleted'), 'success');

@@ -10,7 +10,8 @@ import { useLang } from '../../context/LangContext';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { useCurrency } from '../../context/CurrencyContext';
-import { API, authFetch } from '../../utils/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API, authFetch, queuedAuthFetch } from '../../utils/api';
 import { fmt } from '../../utils/format';
 import { todayLocalISO, parseLocalDate } from '../../utils/dateUtils';
 import { CURRENCIES } from '../../constants/currencies';
@@ -99,12 +100,26 @@ async function getRate(from, to) {
   const cached = _rateCache[key];
   if (cached && Date.now() - cached.ts < 86_400_000) return cached.rate;
   try {
+    const stored = await AsyncStorage.getItem(`rate_${key}`);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Date.now() - parsed.ts < 86_400_000) {
+        _rateCache[key] = parsed;
+        return parsed.rate;
+      }
+    }
+  } catch {}
+  try {
     const res = await fetch(`${API}/rates?from=${from}&to=${to}`);
     const data = await res.json();
-    if (data.rate) _rateCache[key] = { rate: data.rate, ts: Date.now() };
-    return data.rate || null;
+    if (data.rate) {
+      const entry = { rate: data.rate, ts: Date.now() };
+      _rateCache[key] = entry;
+      AsyncStorage.setItem(`rate_${key}`, JSON.stringify(entry)).catch(() => {});
+    }
+    return data.rate || _rateCache[key]?.rate || null;
   } catch {
-    return null;
+    return _rateCache[key]?.rate || null;
   }
 }
 
@@ -327,7 +342,7 @@ export default function SubscriptionsScreen() {
   const { t, formatDate } = useLang();
   const { symbol: userSymbol, code: userCurrency } = useCurrency();
   const { showToast } = useToast();
-  const { addTransaction } = useAuth();
+  const { addTransaction, syncVersion } = useAuth();
 
   const [subs, setSubs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -367,7 +382,7 @@ export default function SubscriptionsScreen() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [userCurrency]);
+  }, [userCurrency, syncVersion]);
 
   const resetForm = () => {
     setSubName(''); setSubCat('entertainment'); setSubCycle('monthly');
@@ -415,7 +430,7 @@ export default function SubscriptionsScreen() {
       };
       const url = editingSub ? `${API}/subscriptions/${editingSub.id}` : `${API}/subscriptions`;
       const method = editingSub ? 'PUT' : 'POST';
-      const res = await authFetch(url, {
+      const res = await queuedAuthFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -440,7 +455,7 @@ export default function SubscriptionsScreen() {
       {
         text: t('deleteBtn'), style: 'destructive',
         onPress: async () => {
-          const res = await authFetch(`${API}/subscriptions/${s.id}`, { method: 'DELETE' });
+          const res = await queuedAuthFetch(`${API}/subscriptions/${s.id}`, { method: 'DELETE' });
           if (res.ok) {
             setSubs(prev => prev.filter(x => x.id !== s.id));
             showToast(t('toastSubDeleted'));

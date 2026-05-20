@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useCategories } from '../../context/CategoriesContext';
 import { useToast } from '../../context/ToastContext';
-import { API, authFetch } from '../../utils/api';
+import { API, authFetch, queuedAuthFetch } from '../../utils/api';
 import { fmt } from '../../utils/format';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
@@ -17,7 +17,7 @@ import Dropdown from '../../components/Dropdown';
 export default function BudgetsScreen() {
   const { colors, isDark } = useTheme();
   const { t } = useLang();
-  const { transactions } = useAuth();
+  const { transactions, syncVersion } = useAuth();
   const { symbol } = useCurrency();
   const { expenseCats, getCatColor } = useCategories();
   const { showToast } = useToast();
@@ -36,7 +36,7 @@ export default function BudgetsScreen() {
       .then(d => { if (Array.isArray(d)) setBudgets(d); })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [syncVersion]);
 
   const now = new Date();
   const thisMonthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -66,7 +66,7 @@ export default function BudgetsScreen() {
     try {
       const url = editingBudget ? `${API}/budgets/${editingBudget.id}` : `${API}/budgets`;
       const method = editingBudget ? 'PUT' : 'POST';
-      const res = await authFetch(url, {
+      const res = await queuedAuthFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ category: selCategory, amount: amt }),
@@ -90,7 +90,7 @@ export default function BudgetsScreen() {
       {
         text: t('deleteBtn'), style: 'destructive',
         onPress: async () => {
-          const res = await authFetch(`${API}/budgets/${b.id}`, { method: 'DELETE' });
+          const res = await queuedAuthFetch(`${API}/budgets/${b.id}`, { method: 'DELETE' });
           if (res.ok) {
             setBudgets(prev => prev.filter(x => x.id !== b.id));
             showToast(t('toastBudgetDeleted'));

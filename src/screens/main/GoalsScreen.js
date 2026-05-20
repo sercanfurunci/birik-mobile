@@ -5,7 +5,8 @@ import { useTheme } from '../../context/ThemeContext';
 import { useLang } from '../../context/LangContext';
 import { useToast } from '../../context/ToastContext';
 import { useCurrency } from '../../context/CurrencyContext';
-import { API, authFetch } from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
+import { API, authFetch, queuedAuthFetch } from '../../utils/api';
 import { fmt } from '../../utils/format';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
@@ -18,6 +19,7 @@ export default function GoalsScreen() {
   const { t, formatDate } = useLang();
   const { symbol } = useCurrency();
   const { showToast } = useToast();
+  const { syncVersion } = useAuth();
 
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,7 +39,7 @@ export default function GoalsScreen() {
       .then(d => { if (Array.isArray(d)) setGoals(d); })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [syncVersion]);
 
   const openAdd = () => {
     setEditingGoal(null);
@@ -68,7 +70,7 @@ export default function GoalsScreen() {
       };
       const url = editingGoal ? `${API}/goals/${editingGoal.id}` : `${API}/goals`;
       const method = editingGoal ? 'PUT' : 'POST';
-      const res = await authFetch(url, {
+      const res = await queuedAuthFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -90,7 +92,7 @@ export default function GoalsScreen() {
       {
         text: t('deleteBtn'), style: 'destructive',
         onPress: async () => {
-          const res = await authFetch(`${API}/goals/${g.id}`, { method: 'DELETE' });
+          const res = await queuedAuthFetch(`${API}/goals/${g.id}`, { method: 'DELETE' });
           if (res.ok) {
             setGoals(prev => prev.filter(x => x.id !== g.id));
             showToast(t('toastGoalDeleted'));

@@ -4,12 +4,14 @@ import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { LangProvider, useLang } from './src/context/LangContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
-import { ToastProvider, useToast } from './src/context/ToastContext';
+import { ToastProvider } from './src/context/ToastContext';
+import { NetworkProvider } from './src/context/NetworkContext';
 import { CurrencyProvider } from './src/context/CurrencyContext';
 import { CategoriesProvider } from './src/context/CategoriesContext';
 import { API, authFetch } from './src/utils/api';
 import AppNavigator from './src/navigation/AppNavigator';
 import ToastContainer from './src/components/Toast';
+import OfflineBanner from './src/components/OfflineBanner';
 import Splash from './src/components/Splash';
 
 const MIN_SPLASH_MS = 2600;
@@ -50,6 +52,7 @@ function AppContent() {
         onSave={handleSaveCategories}
       >
         <View style={{ flex: 1, backgroundColor: colors.bg }}>
+          <OfflineBanner />
           <AppNavigator />
           <ToastContainer />
         </View>
@@ -64,7 +67,9 @@ export default function App() {
       <LangProvider>
         <AuthProvider>
           <ToastProvider>
-            <AppContent />
+            <NetworkProvider>
+              <AppContent />
+            </NetworkProvider>
           </ToastProvider>
         </AuthProvider>
       </LangProvider>

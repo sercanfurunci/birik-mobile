@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API, authFetch } from '../utils/api';
+import NetInfo from '@react-native-community/netinfo';
+import { API, authFetch, queuedAuthFetch } from '../utils/api';
+import { getQueue, removeFromQueue } from '../utils/offlineQueue';
 
 const AuthContext = createContext(null);
 
@@ -8,8 +10,11 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [transactions, setTransactions] = useState([]);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [syncVersion, setSyncVersion] = useState(0);
 
   useEffect(() => {
+    getQueue().then(q => setPendingCount(q.length));
     AsyncStorage.getItem('auth_token').then(token => {
       if (!token) { setAuthChecked(true); return; }
       authFetch(`${API}/auth/me`)
@@ -58,8 +63,58 @@ export function AuthProvider({ children }) {
     setCurrentUser(prev => ({ ...prev, ...updates }));
   }, []);
 
+  const syncOfflineQueue = useCallback(async () => {
+    const queue = await getQueue();
+    if (!queue.length) return 0;
+    let synced = 0;
+    for (const item of queue) {
+      try {
+        const res = await authFetch(item.url, {
+          method: item.method,
+          headers: item.body ? { 'Content-Type': 'application/json' } : {},
+          body: item.body,
+        });
+        if (res.ok) {
+          const isTransactionPost = item.method === 'POST' && item.url.endsWith('/transactions');
+          const isTransactionPut = item.method === 'PUT' && /\/transactions\//.test(item.url);
+
+          if (isTransactionPost) {
+            const real = await res.json();
+            if (real?.id) {
+              setTransactions(prev => prev.map(tx =>
+                tx.id === item.tempId ? { ...real, _pending: false } : tx
+              ));
+            }
+          } else if (isTransactionPut) {
+            const real = await res.json();
+            if (real?.id) {
+              setTransactions(prev => prev.map(tx =>
+                tx.id === real.id ? { ...real, _pending: false } : tx
+              ));
+            }
+          }
+
+          await removeFromQueue(item.tempId);
+          synced++;
+        }
+      } catch {}
+    }
+    const remaining = await getQueue();
+    setPendingCount(remaining.length);
+    if (synced > 0) setSyncVersion(v => v + 1);
+    return synced;
+  }, []);
+
+  useEffect(() => {
+    const unsub = NetInfo.addEventListener(state => {
+      const connected = !!(state.isConnected && state.isInternetReachable !== false);
+      if (connected) syncOfflineQueue();
+    });
+    return unsub;
+  }, [syncOfflineQueue]);
+
   const addTransaction = useCallback(async (tx) => {
-    const res = await authFetch(`${API}/transactions`, {
+    const res = await queuedAuthFetch(`${API}/transactions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(tx),
@@ -68,18 +123,20 @@ export function AuthProvider({ children }) {
     const data = await res.json();
     if (!data?.id) return null;
     setTransactions(prev => [data, ...prev]);
+    if (res._queued) setPendingCount(c => c + 1);
     return data;
   }, []);
 
   const deleteTransaction = useCallback(async (id) => {
-    const res = await authFetch(`${API}/transactions/${id}`, { method: 'DELETE' });
+    const res = await queuedAuthFetch(`${API}/transactions/${id}`, { method: 'DELETE' });
     if (!res.ok) return false;
     setTransactions(prev => prev.filter(tx => tx.id !== id));
+    if (res._queued) setPendingCount(c => c + 1);
     return true;
   }, []);
 
   const editTransaction = useCallback(async (id, updated) => {
-    const res = await authFetch(`${API}/transactions/${id}`, {
+    const res = await queuedAuthFetch(`${API}/transactions/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updated),
@@ -88,6 +145,7 @@ export function AuthProvider({ children }) {
     const data = await res.json();
     if (!data?.id) return null;
     setTransactions(prev => prev.map(tx => tx.id === id ? data : tx));
+    if (res._queued) setPendingCount(c => c + 1);
     return data;
   }, []);
 
@@ -96,6 +154,7 @@ export function AuthProvider({ children }) {
       currentUser, authChecked, transactions,
       handleAuthSuccess, handleLogout, updateUser,
       refreshTransactions, addTransaction, deleteTransaction, editTransaction,
+      pendingCount, syncOfflineQueue, syncVersion,
     }}>
       {children}
     </AuthContext.Provider>
