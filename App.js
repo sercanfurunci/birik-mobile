@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { View, AppState, StyleSheet } from 'react-native';
+import { View, AppState, StyleSheet, Animated } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { LangProvider, useLang } from './src/context/LangContext';
@@ -19,12 +19,14 @@ import { getBiometricLockEnabled, authenticateWithBiometrics } from './src/utils
 const MIN_SPLASH_MS = 2600;
 
 function AppContent() {
-  const { colors, themeChecked } = useTheme();
+  const { colors, isDark, themeChecked } = useTheme();
   const { langChecked } = useLang();
   const { currentUser, authChecked, updateUser } = useAuth();
   const [minElapsed, setMinElapsed] = useState(false);
   const [locked, setLocked] = useState(false);
   const appState = useRef(AppState.currentState);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const prevIsDark = useRef(null);
 
   useEffect(() => {
     const t = setTimeout(() => setMinElapsed(true), MIN_SPLASH_MS);
@@ -34,6 +36,16 @@ function AppContent() {
   useEffect(() => {
     requestNotificationPermission();
   }, []);
+
+  useEffect(() => {
+    if (prevIsDark.current === null) { prevIsDark.current = isDark; return; }
+    if (prevIsDark.current === isDark) return;
+    prevIsDark.current = isDark;
+    Animated.sequence([
+      Animated.timing(fadeAnim, { toValue: 0, duration: 120, useNativeDriver: true }),
+      Animated.timing(fadeAnim, { toValue: 1, duration: 180, useNativeDriver: true }),
+    ]).start();
+  }, [isDark]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -75,7 +87,7 @@ function AppContent() {
         initialCats={currentUser?.custom_categories || []}
         onSave={handleSaveCategories}
       >
-        <View style={{ flex: 1, backgroundColor: colors.bg }}>
+        <Animated.View style={{ flex: 1, backgroundColor: colors.bg, opacity: fadeAnim }}>
           <OfflineBanner />
           <AppNavigator />
           <ToastContainer />
@@ -86,7 +98,7 @@ function AppContent() {
               </View>
             </View>
           )}
-        </View>
+        </Animated.View>
       </CategoriesProvider>
     </CurrencyProvider>
   );
