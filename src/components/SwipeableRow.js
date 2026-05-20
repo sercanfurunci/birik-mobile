@@ -18,7 +18,7 @@ export default function SwipeableRow({ children, onDelete }) {
   const spring = (toValue, cb) =>
     Animated.spring(translateX, {
       toValue,
-      useNativeDriver: true,
+      useNativeDriver: false,
       speed: 16,
       bounciness: 2,
     }).start(cb);
@@ -30,14 +30,13 @@ export default function SwipeableRow({ children, onDelete }) {
         onMoveShouldSetPanResponder: (_, { dx, dy }) =>
           Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy) * 2,
         onPanResponderGrant: () => {
-          translateX.setOffset(snappedPos.current);
-          translateX.setValue(0);
+          translateX.stopAnimation();
         },
-        onPanResponderMove: Animated.event([null, { dx: translateX }], {
-          useNativeDriver: true,
-        }),
+        onPanResponderMove: (_, { dx }) => {
+          const next = Math.max(-SCREEN_W, Math.min(0, snappedPos.current + dx));
+          translateX.setValue(next);
+        },
         onPanResponderRelease: (_, { dx, vx }) => {
-          translateX.flattenOffset();
           const finalPos = snappedPos.current + dx;
 
           if (finalPos < -FULL_THRESHOLD || vx < -1.2) {
@@ -57,7 +56,6 @@ export default function SwipeableRow({ children, onDelete }) {
           }
         },
         onPanResponderTerminate: () => {
-          translateX.flattenOffset();
           snappedPos.current = 0;
           spring(0);
         },
