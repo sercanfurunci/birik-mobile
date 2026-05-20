@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, StatusBar, Dimensions, Image, Modal, Switch } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Pressable, StyleSheet, StatusBar, Dimensions, Image, Modal, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
@@ -186,7 +186,7 @@ export default function DashboardScreen({ navigation }) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.bg} />
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} onScrollBeginDrag={() => setSelectedDay(null)}>
         {/* Header — logo + app name + username, matches web */}
         <View style={styles.header}>
           <Image source={require('../../../assets/birik-icon.png')} style={styles.logo} />
@@ -341,6 +341,7 @@ export default function DashboardScreen({ navigation }) {
         {prefs.daily && hasDaily && (
           <>
             <Text style={[styles.sectionTitle, { color: colors.text3 }]}>{t('dailyDist').toUpperCase()}</Text>
+            <Pressable onPress={() => setSelectedDay(null)}>
             <Card style={[styles.chartCard, { borderColor: colors.border }]}>
               <Text style={[styles.chartHint, { color: colors.text3 }]}>{t('dailyDistTapHint')}</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
@@ -407,6 +408,7 @@ export default function DashboardScreen({ navigation }) {
                 </View>
               )}
             </Card>
+            </Pressable>
           </>
         )}
 
