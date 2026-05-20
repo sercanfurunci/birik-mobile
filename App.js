@@ -14,6 +14,7 @@ import ToastContainer from './src/components/Toast';
 import OfflineBanner from './src/components/OfflineBanner';
 import Splash from './src/components/Splash';
 import { requestNotificationPermission } from './src/utils/notifications';
+import ErrorBoundary from './src/components/ErrorBoundary';
 
 const MIN_SPLASH_MS = 2600;
 
@@ -82,16 +83,18 @@ function AppContent() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <LangProvider>
-        <AuthProvider>
-          <ToastProvider>
-            <NetworkProvider>
-              <AppContent />
-            </NetworkProvider>
-          </ToastProvider>
-        </AuthProvider>
-      </LangProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <LangProvider>
+          <AuthProvider>
+            <ToastProvider>
+              <NetworkProvider>
+                <AppContent />
+              </NetworkProvider>
+            </ToastProvider>
+          </AuthProvider>
+        </LangProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
