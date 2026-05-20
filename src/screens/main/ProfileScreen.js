@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  TextInput, ActivityIndicator, Modal,
+  TextInput, ActivityIndicator, Modal, Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,6 +11,7 @@ import { useLang } from '../../context/LangContext';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { API, authFetch } from '../../utils/api';
+import { isBiometricAvailable, getBiometricLockEnabled, setBiometricLockEnabled, authenticateWithBiometrics } from '../../utils/biometric';
 import { CURRENCIES } from '../../constants/currencies';
 import Dropdown from '../../components/Dropdown';
 
@@ -41,6 +42,23 @@ export default function ProfileScreen() {
   const [username, setUsername] = useState(currentUser?.username || '');
   const [savingName, setSavingName] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState(currentUser?.currency || 'USD');
+
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
+
+  useEffect(() => {
+    isBiometricAvailable().then(setBiometricAvailable);
+    getBiometricLockEnabled().then(setBiometricEnabled);
+  }, []);
+
+  const toggleBiometric = async (val) => {
+    if (val) {
+      const ok = await authenticateWithBiometrics();
+      if (!ok) return;
+    }
+    await setBiometricLockEnabled(val);
+    setBiometricEnabled(val);
+  };
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState('');
@@ -190,6 +208,18 @@ export default function ProfileScreen() {
               ]}
             />
           </View>
+          {biometricAvailable && (
+            <View style={[s.prefRow, s.prefDivider]}>
+              <Ionicons name="finger-print" size={18} color={colors.text2} />
+              <Text style={s.prefLabel}>{t('biometricLock')}</Text>
+              <Switch
+                value={biometricEnabled}
+                onValueChange={toggleBiometric}
+                trackColor={{ false: colors.border, true: colors.brand }}
+                thumbColor="#fff"
+              />
+            </View>
+          )}
         </Section>
 
         {/* Currency */}

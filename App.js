@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { View } from 'react-native';
+import { useState, useEffect, useRef } from 'react';
+import { View, AppState, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { LangProvider, useLang } from './src/context/LangContext';
@@ -14,6 +14,7 @@ import ToastContainer from './src/components/Toast';
 import OfflineBanner from './src/components/OfflineBanner';
 import Splash from './src/components/Splash';
 import { requestNotificationPermission } from './src/utils/notifications';
+import { getBiometricLockEnabled, authenticateWithBiometrics } from './src/utils/biometric';
 
 const MIN_SPLASH_MS = 2600;
 
@@ -22,6 +23,8 @@ function AppContent() {
   const { langChecked } = useLang();
   const { currentUser, authChecked, updateUser } = useAuth();
   const [minElapsed, setMinElapsed] = useState(false);
+  const [locked, setLocked] = useState(false);
+  const appState = useRef(AppState.currentState);
 
   useEffect(() => {
     const t = setTimeout(() => setMinElapsed(true), MIN_SPLASH_MS);
@@ -31,6 +34,22 @@ function AppContent() {
   useEffect(() => {
     requestNotificationPermission();
   }, []);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const sub = AppState.addEventListener('change', async nextState => {
+      if (appState.current.match(/inactive|background/) && nextState === 'active') {
+        const enabled = await getBiometricLockEnabled();
+        if (enabled) {
+          setLocked(true);
+          const ok = await authenticateWithBiometrics();
+          if (ok) setLocked(false);
+        }
+      }
+      appState.current = nextState;
+    });
+    return () => sub.remove();
+  }, [currentUser]);
 
   const handleSaveCategories = async (cats) => {
     try {
@@ -60,11 +79,24 @@ function AppContent() {
           <OfflineBanner />
           <AppNavigator />
           <ToastContainer />
+          {locked && (
+            <View style={[appStyles.lockScreen, { backgroundColor: colors.bg }]}>
+              <View style={appStyles.lockIcon}>
+                <View style={[appStyles.lockDot, { backgroundColor: colors.brand }]} />
+              </View>
+            </View>
+          )}
         </View>
       </CategoriesProvider>
     </CurrencyProvider>
   );
 }
+
+const appStyles = StyleSheet.create({
+  lockScreen: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center', zIndex: 999 },
+  lockIcon: { width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(128,128,128,0.1)', justifyContent: 'center', alignItems: 'center' },
+  lockDot: { width: 24, height: 24, borderRadius: 12 },
+});
 
 export default function App() {
   return (
