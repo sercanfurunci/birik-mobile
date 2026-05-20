@@ -24,9 +24,11 @@ function AppContent() {
   const { currentUser, authChecked, updateUser } = useAuth();
   const [minElapsed, setMinElapsed] = useState(false);
   const [locked, setLocked] = useState(false);
+  const [bioReady, setBioReady] = useState(false);
   const appState = useRef(AppState.currentState);
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const prevIsDark = useRef(null);
+  const bioCheckDone = useRef(false);
 
   useEffect(() => {
     const t = setTimeout(() => setMinElapsed(true), MIN_SPLASH_MS);
@@ -47,6 +49,24 @@ function AppContent() {
     ]).start();
   }, [isDark]);
 
+  // Initial bio check on cold start (runs once after auth resolves)
+  useEffect(() => {
+    if (!authChecked || bioCheckDone.current) return;
+    bioCheckDone.current = true;
+    (async () => {
+      if (currentUser) {
+        const enabled = await getBiometricLockEnabled();
+        if (enabled) {
+          setLocked(true);
+          const ok = await authenticateWithBiometrics();
+          if (ok) setLocked(false);
+        }
+      }
+      setBioReady(true);
+    })();
+  }, [authChecked, currentUser]);
+
+  // Bio check on background → foreground
   useEffect(() => {
     if (!currentUser) return;
     const sub = AppState.addEventListener('change', async nextState => {
@@ -77,7 +97,7 @@ function AppContent() {
     } catch {}
   };
 
-  if (!authChecked || !themeChecked || !langChecked || !minElapsed) {
+  if (!authChecked || !themeChecked || !langChecked || !minElapsed || !bioReady) {
     return <Splash />;
   }
 

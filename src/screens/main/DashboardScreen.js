@@ -531,28 +531,30 @@ export default function DashboardScreen({ navigation }) {
 
       {/* Dashboard preferences modal */}
       <Modal visible={showPrefs} transparent animationType="slide" onRequestClose={() => setShowPrefs(false)}>
-        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowPrefs(false)} />
-        <View style={[styles.prefsSheet, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={[styles.prefsHandle, { backgroundColor: colors.border }]} />
-          <Text style={[styles.prefsTitle, { color: colors.text1 }]}>{t('dashCustomize')}</Text>
-          {[
-            { key: 'stats', label: t('dashSectionStats') },
-            { key: 'breakdown', label: t('dashSectionBreakdown') },
-            { key: 'daily', label: t('dashSectionDaily') },
-            { key: 'projection', label: t('dashSectionProjection') },
-            { key: 'recent', label: t('dashSectionRecent') },
-            { key: 'goals', label: t('dashSectionGoals') },
-          ].map(({ key, label }, i, arr) => (
-            <View key={key} style={[styles.prefsRow, i < arr.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}>
-              <Text style={[styles.prefsLabel, { color: colors.text1 }]}>{label}</Text>
-              <Switch
-                value={prefs[key]}
-                onValueChange={() => togglePref(key)}
-                trackColor={{ false: colors.border, true: colors.brand }}
-                thumbColor="#fff"
-              />
-            </View>
-          ))}
+        <View style={styles.modalOverlayContainer}>
+          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowPrefs(false)} />
+          <View style={[styles.prefsSheet, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={[styles.prefsHandle, { backgroundColor: colors.border }]} />
+            <Text style={[styles.prefsTitle, { color: colors.text1 }]}>{t('dashCustomize')}</Text>
+            {[
+              { key: 'stats', label: t('dashSectionStats') },
+              { key: 'breakdown', label: t('dashSectionBreakdown') },
+              { key: 'daily', label: t('dashSectionDaily') },
+              { key: 'projection', label: t('dashSectionProjection') },
+              { key: 'recent', label: t('dashSectionRecent') },
+              { key: 'goals', label: t('dashSectionGoals') },
+            ].map(({ key, label }, i, arr) => (
+              <View key={key} style={[styles.prefsRow, i < arr.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}>
+                <Text style={[styles.prefsLabel, { color: colors.text1 }]}>{label}</Text>
+                <Switch
+                  value={prefs[key]}
+                  onValueChange={() => togglePref(key)}
+                  trackColor={{ false: colors.border, true: colors.brand }}
+                  thumbColor="#fff"
+                />
+              </View>
+            ))}
+          </View>
         </View>
       </Modal>
     </SafeAreaView>
@@ -625,4 +627,12 @@ const styles = StyleSheet.create({
   insightCard: { padding: 16, marginBottom: 12, borderWidth: 1, borderRadius: 14 },
   insightTitle: { fontSize: 14, fontWeight: '700', flex: 1, marginRight: 8 },
   insightBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, flexShrink: 0 },
+  prefBtn: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center', borderWidth: 1 },
+  modalOverlayContainer: { flex: 1, justifyContent: 'flex-end' },
+  modalOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.4)' },
+  prefsSheet: { borderTopLeftRadius: 20, borderTopRightRadius: 20, borderTopWidth: 1, borderLeftWidth: 1, borderRightWidth: 1, paddingBottom: 34, paddingHorizontal: 0 },
+  prefsHandle: { width: 36, height: 4, borderRadius: 2, alignSelf: 'center', marginTop: 12, marginBottom: 4 },
+  prefsTitle: { fontSize: 16, fontWeight: '700', paddingHorizontal: 20, paddingVertical: 14 },
+  prefsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14 },
+  prefsLabel: { fontSize: 15, fontWeight: '500', flex: 1 },
 });
