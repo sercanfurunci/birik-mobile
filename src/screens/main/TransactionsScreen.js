@@ -21,6 +21,7 @@ import Card from '../../components/Card';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
 import Dropdown from '../../components/Dropdown';
+import SwipeableRow from '../../components/SwipeableRow';
 
 const SORT_OPTIONS = ['dateDesc', 'dateAsc', 'amountDesc', 'amountAsc'];
 
@@ -345,24 +346,46 @@ export default function TransactionsScreen({ navigation }) {
           </View>
         ) : (
           filtered.map((tx, i) => (
-            <TouchableOpacity key={tx.id} onPress={() => openEdit(tx)} onLongPress={() => handleDelete(tx)} activeOpacity={0.85}>
-              <View style={[styles.txCard, { backgroundColor: colors.surface, borderColor: colors.border }, i > 0 && { marginTop: 8 }]}>
-                <View style={[styles.txIcon, { backgroundColor: `${getCatColor(tx.category, tx.type)}18` }]}>
-                  <View style={[styles.txIconDot, { backgroundColor: getCatColor(tx.category, tx.type) }]} />
-                </View>
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text style={[styles.txDesc, { color: colors.text1 }]} numberOfLines={1}>
-                    {tx.description || t(tx.category)}
+            <SwipeableRow
+              key={tx.id}
+              renderActions={(close) => (
+                <>
+                  <TouchableOpacity
+                    onPress={() => { close(); openEdit(tx); }}
+                    style={[styles.swipeAction, { backgroundColor: colors.brand }]}
+                    activeOpacity={0.85}
+                  >
+                    <Ionicons name="pencil-outline" size={20} color="#fff" />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => { close(); handleDelete(tx); }}
+                    style={[styles.swipeAction, { backgroundColor: colors.red }]}
+                    activeOpacity={0.85}
+                  >
+                    <Ionicons name="trash-outline" size={20} color="#fff" />
+                  </TouchableOpacity>
+                </>
+              )}
+            >
+              <TouchableOpacity onPress={() => openEdit(tx)} activeOpacity={0.85} style={i > 0 && { marginTop: 8 }}>
+                <View style={[styles.txCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <View style={[styles.txIcon, { backgroundColor: `${getCatColor(tx.category, tx.type)}18` }]}>
+                    <View style={[styles.txIconDot, { backgroundColor: getCatColor(tx.category, tx.type) }]} />
+                  </View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={[styles.txDesc, { color: colors.text1 }]} numberOfLines={1}>
+                      {tx.description || t(tx.category)}
+                    </Text>
+                    <Text style={[styles.txMeta, { color: colors.text3 }]}>
+                      {formatDate(tx.date)} · {t(tx.category)}
+                    </Text>
+                  </View>
+                  <Text style={[styles.txAmt, { color: tx.type === 'income' ? colors.green : colors.red }]}>
+                    {tx.type === 'income' ? '+' : '-'}{symbol}{fmt(tx.amount)}
                   </Text>
-                  <Text style={[styles.txMeta, { color: colors.text3 }]}>
-                    {formatDate(tx.date)} · {t(tx.category)}
-                  </Text>
                 </View>
-                <Text style={[styles.txAmt, { color: tx.type === 'income' ? colors.green : colors.red }]}>
-                  {tx.type === 'income' ? '+' : '-'}{symbol}{fmt(tx.amount)}
-                </Text>
-              </View>
-            </TouchableOpacity>
+              </TouchableOpacity>
+            </SwipeableRow>
           ))
         )}
       </ScrollView>
@@ -587,6 +610,7 @@ const styles = StyleSheet.create({
   txDesc: { fontSize: 14, fontWeight: '500', marginBottom: 3 },
   txMeta: { fontSize: 12 },
   txAmt: { fontSize: 14, fontWeight: '700' },
+  swipeAction: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   modal: { padding: 20, paddingBottom: 40 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
   modalTitle: { fontSize: 18, fontWeight: '700' },
