@@ -13,7 +13,11 @@ import AppNavigator from './src/navigation/AppNavigator';
 import ToastContainer from './src/components/Toast';
 import OfflineBanner from './src/components/OfflineBanner';
 import Splash from './src/components/Splash';
-import { requestNotificationPermission } from './src/utils/notifications';
+import {
+  requestNotificationPermission,
+  scheduleSubscriptionReminders,
+  scheduleRecurringReminders,
+} from './src/utils/notifications';
 import ErrorBoundary from './src/components/ErrorBoundary';
 
 const MIN_SPLASH_MS = 2600;
@@ -21,7 +25,7 @@ const MIN_SPLASH_MS = 2600;
 function AppContent() {
   const { colors, isDark, themeChecked } = useTheme();
   const { langChecked } = useLang();
-  const { currentUser, authChecked, updateUser } = useAuth();
+  const { currentUser, authChecked, updateUser, syncVersion } = useAuth();
   const [minElapsed, setMinElapsed] = useState(false);
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const prevIsDark = useRef(null);
@@ -34,6 +38,29 @@ function AppContent() {
   useEffect(() => {
     requestNotificationPermission();
   }, []);
+
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const [subsRes, recRes] = await Promise.all([
+          authFetch(`${API}/subscriptions`).catch(() => null),
+          authFetch(`${API}/recurring`).catch(() => null),
+        ]);
+        if (cancelled) return;
+        if (subsRes?.ok) {
+          const subs = await subsRes.json();
+          if (Array.isArray(subs)) scheduleSubscriptionReminders(subs).catch(() => {});
+        }
+        if (recRes?.ok) {
+          const rules = await recRes.json();
+          if (Array.isArray(rules)) scheduleRecurringReminders(rules).catch(() => {});
+        }
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [currentUser?.id, syncVersion]);
 
   useEffect(() => {
     if (prevIsDark.current === null) { prevIsDark.current = isDark; return; }

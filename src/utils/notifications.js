@@ -2,6 +2,7 @@ import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { advanceToNextBilling } from './dateUtils';
+import { tForLang, getStoredLang } from '../context/LangContext';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -75,10 +76,13 @@ export async function scheduleSubscriptionReminders(subscriptions) {
     reminderDate.setHours(9, 0, 0, 0);
     if (reminderDate <= new Date()) continue;
 
+    const lang = await getStoredLang();
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: '💳 Yaklaşan Fatura',
-        body: `${sub.name} — ${sub.reminder_days} gün sonra ${sub.amount} ${sub.currency} tahsil edilecek`,
+        title: tForLang(lang, 'notifSubReminderTitle'),
+        body: tForLang(lang, 'notifSubReminderBody', {
+          name: sub.name, days: sub.reminder_days, amount: sub.amount, currency: sub.currency,
+        }),
         data: { type: 'subscription_reminder', subId: sub.id },
         channelId: 'default',
       },
@@ -93,18 +97,24 @@ export async function notifyBudgetExceeded(categoryLabel, spent, limit, symbol, 
   const key = `budget_exceeded_${categoryId}_${monthKey}`;
   if (await wasSent(key)) return;
   await markSent(key);
-  await send('⚠️ Bütçe Aşıldı',
-    `${categoryLabel} bütçesi doldu: ${symbol}${spent.toFixed(0)} / ${symbol}${limit.toFixed(0)}`,
-    { type: 'budget_exceeded' });
+  const lang = await getStoredLang();
+  await send(
+    tForLang(lang, 'notifBudgetExceededTitle'),
+    tForLang(lang, 'notifBudgetExceededBody', { categoryLabel, symbol, spent, limit }),
+    { type: 'budget_exceeded' },
+  );
 }
 
 export async function notifyBudgetWarning(categoryLabel, percent, symbol, spent, limit, categoryId, monthKey) {
   const key = `budget_warning_${categoryId}_${monthKey}`;
   if (await wasSent(key)) return;
   await markSent(key);
-  await send('📊 Bütçe Uyarısı',
-    `${categoryLabel}: %${percent} kullanıldı (${symbol}${spent.toFixed(0)} / ${symbol}${limit.toFixed(0)})`,
-    { type: 'budget_warning' });
+  const lang = await getStoredLang();
+  await send(
+    tForLang(lang, 'notifBudgetWarningTitle'),
+    tForLang(lang, 'notifBudgetWarningBody', { categoryLabel, percent, symbol, spent, limit }),
+    { type: 'budget_warning' },
+  );
 }
 
 // ── Goals ─────────────────────────────────────────────────────────────────────
@@ -114,16 +124,22 @@ export async function notifyGoalProgress(goalName, goalId, pct) {
     const key = `goal_complete_${goalId}`;
     if (await wasSent(key)) return;
     await markSent(key);
-    await send('🎯 Hedefe Ulaşıldı!',
-      `"${goalName}" hedefini tamamladın, tebrikler!`,
-      { type: 'goal_complete' });
+    const lang = await getStoredLang();
+    await send(
+      tForLang(lang, 'notifGoalCompleteTitle'),
+      tForLang(lang, 'notifGoalCompleteBody', { goalName }),
+      { type: 'goal_complete' },
+    );
   } else if (pct >= 80) {
     const key = `goal_80_${goalId}`;
     if (await wasSent(key)) return;
     await markSent(key);
-    await send('💪 Hedefe Yaklaştın',
-      `"${goalName}" hedefinin %${pct}'ine ulaştın!`,
-      { type: 'goal_progress' });
+    const lang = await getStoredLang();
+    await send(
+      tForLang(lang, 'notifGoalProgressTitle'),
+      tForLang(lang, 'notifGoalProgressBody', { goalName, pct }),
+      { type: 'goal_progress' },
+    );
   }
 }
 
@@ -137,24 +153,37 @@ export async function scheduleRecurringReminders(rules) {
     }
   }
 
-  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const now = new Date();
+  const today = new Date(now); today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+  const lang = await getStoredLang();
 
   for (const rule of rules) {
     if (!rule.next_run_date) continue;
-    const runDate = new Date(rule.next_run_date.split('T')[0]);
-    const isToday = runDate.getTime() === today.getTime();
-    const isTomorrow = runDate.getTime() === tomorrow.getTime();
-    if (!isToday && !isTomorrow) continue;
+    if (rule.is_active === false) continue;
+    if (rule.reminder_days === null || rule.reminder_days === undefined) continue;
+
+    const runDate = new Date(rule.next_run_date.split('T')[0] + 'T00:00:00');
+    if (isNaN(runDate.getTime())) continue;
 
     const fireAt = new Date(runDate);
+    fireAt.setDate(fireAt.getDate() - Number(rule.reminder_days || 0));
     fireAt.setHours(9, 0, 0, 0);
-    if (fireAt <= new Date()) continue;
+    if (fireAt <= now) continue;
+
+    const fireDay = new Date(fireAt); fireDay.setHours(0, 0, 0, 0);
+    const when = fireDay.getTime() === today.getTime()
+      ? tForLang(lang, 'notifWhenToday')
+      : fireDay.getTime() === tomorrow.getTime()
+        ? tForLang(lang, 'notifWhenTomorrow')
+        : runDate.toLocaleDateString(lang === 'tr' ? 'tr-TR' : 'en-US', { day: 'numeric', month: 'short' });
 
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: '🔄 Tekrarlayan İşlem',
-        body: `${rule.description || rule.category} — ${isToday ? 'bugün' : 'yarın'} işlenecek`,
+        title: tForLang(lang, 'notifRecurringTitle'),
+        body: tForLang(lang, 'notifRecurringBody', {
+          description: rule.description || rule.category, when,
+        }),
         data: { type: 'recurring_reminder', ruleId: rule.id },
         channelId: 'default',
       },

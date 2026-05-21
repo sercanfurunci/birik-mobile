@@ -18,7 +18,12 @@
       }
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.birik.mobile",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Birik needs access to your photo library so you can import bank statement images.",
+        "NSCameraUsageDescription": "Birik needs access to your camera so you can scan bank statements with your phone."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -36,6 +41,14 @@
           "color": "#22c55e"
         }
       ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Birik needs access to your photos so you can import bank statement images.",
+          "cameraPermission": "Birik needs access to your camera so you can scan bank statements."
+        }
+      ],
+      "expo-document-picker",
       "@react-native-community/datetimepicker",
       "expo-secure-store"
     ],

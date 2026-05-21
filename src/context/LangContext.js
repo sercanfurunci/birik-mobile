@@ -277,7 +277,8 @@ const translations = {
     goalDaysLeft: 'days left',
     goalToday: 'Due today',
     goalOverdue: 'Overdue',
-    subReminder: 'Email Reminder',
+    subReminder: 'Reminder',
+    subReminderHelp: 'Sends both an email and an in-app notification',
     subReminderNone: 'No reminder',
     subReminder3: '3 days before',
     subReminder7: '7 days before',
@@ -379,6 +380,30 @@ const translations = {
     dashSectionProjection: 'Month Projection',
     dashSectionRecent: 'Recent Activity',
     dashSectionGoals: 'Savings Goals',
+    notifSubReminderTitle: '💳 Upcoming Charge',
+    notifSubReminderBody: ({ name, days, amount, currency }) =>
+      `${name} — ${amount} ${currency} will be charged in ${days} ${days === 1 ? 'day' : 'days'}`,
+    notifBudgetExceededTitle: '⚠️ Budget Exceeded',
+    notifBudgetExceededBody: ({ categoryLabel, symbol, spent, limit }) =>
+      `${categoryLabel} budget reached: ${symbol}${spent.toFixed(0)} / ${symbol}${limit.toFixed(0)}`,
+    notifBudgetWarningTitle: '📊 Budget Alert',
+    notifBudgetWarningBody: ({ categoryLabel, percent, symbol, spent, limit }) =>
+      `${categoryLabel}: ${percent}% used (${symbol}${spent.toFixed(0)} / ${symbol}${limit.toFixed(0)})`,
+    notifGoalCompleteTitle: '🎯 Goal Reached!',
+    notifGoalCompleteBody: ({ goalName }) => `You completed "${goalName}". Congrats!`,
+    notifGoalProgressTitle: '💪 Almost there',
+    notifGoalProgressBody: ({ goalName, pct }) => `You're ${pct}% of the way to "${goalName}"!`,
+    notifRecurringTitle: '🔄 Recurring Transaction',
+    notifRecurringBody: ({ description, when }) => `${description} — processing ${when}`,
+    notifWhenToday: 'today',
+    notifWhenTomorrow: 'tomorrow',
+    bioPromptMessage: 'Verify your identity',
+    bioFallbackLabel: 'Use password',
+    recReminder: 'Reminder',
+    recReminderHelp: 'Sends an in-app notification at 9 AM',
+    recReminderSameDay: 'On the day',
+    recReminder1: '1 day before',
+    recReminder3: '3 days before',
   },
   tr: {
     appName: 'Birik',
@@ -635,7 +660,8 @@ const translations = {
     goalDaysLeft: 'gün kaldı',
     goalToday: 'Bugün bitiyor',
     goalOverdue: 'Geçti',
-    subReminder: 'E-posta Hatırlatıcı',
+    subReminder: 'Hatırlatıcı',
+    subReminderHelp: 'Hem e-posta hem de uygulama bildirimi gönderir',
     subReminderNone: 'Hatırlatıcı yok',
     subReminder3: '3 gün önce',
     subReminder7: '7 gün önce',
@@ -737,8 +763,46 @@ const translations = {
     dashSectionProjection: 'Ay Tahmini',
     dashSectionRecent: 'Son İşlemler',
     dashSectionGoals: 'Birikim Hedefleri',
+    notifSubReminderTitle: '💳 Yaklaşan Fatura',
+    notifSubReminderBody: ({ name, days, amount, currency }) =>
+      `${name} — ${days} gün sonra ${amount} ${currency} tahsil edilecek`,
+    notifBudgetExceededTitle: '⚠️ Bütçe Aşıldı',
+    notifBudgetExceededBody: ({ categoryLabel, symbol, spent, limit }) =>
+      `${categoryLabel} bütçesi doldu: ${symbol}${spent.toFixed(0)} / ${symbol}${limit.toFixed(0)}`,
+    notifBudgetWarningTitle: '📊 Bütçe Uyarısı',
+    notifBudgetWarningBody: ({ categoryLabel, percent, symbol, spent, limit }) =>
+      `${categoryLabel}: %${percent} kullanıldı (${symbol}${spent.toFixed(0)} / ${symbol}${limit.toFixed(0)})`,
+    notifGoalCompleteTitle: '🎯 Hedefe Ulaşıldı!',
+    notifGoalCompleteBody: ({ goalName }) => `"${goalName}" hedefini tamamladın, tebrikler!`,
+    notifGoalProgressTitle: '💪 Hedefe Yaklaştın',
+    notifGoalProgressBody: ({ goalName, pct }) => `"${goalName}" hedefinin %${pct}'ine ulaştın!`,
+    notifRecurringTitle: '🔄 Tekrarlayan İşlem',
+    notifRecurringBody: ({ description, when }) => `${description} — ${when} işlenecek`,
+    notifWhenToday: 'bugün',
+    notifWhenTomorrow: 'yarın',
+    bioPromptMessage: 'Kimliğini doğrula',
+    bioFallbackLabel: 'Şifre kullan',
+    recReminder: 'Hatırlatıcı',
+    recReminderHelp: 'O gün sabah 9\'da uygulama bildirimi gönderir',
+    recReminderSameDay: 'Aynı gün',
+    recReminder1: '1 gün önce',
+    recReminder3: '3 gün önce',
   },
 };
+
+export function tForLang(lang, key, params) {
+  const val = translations[lang]?.[key] ?? translations['en']?.[key] ?? key;
+  if (typeof val === 'function') return val(params);
+  return val;
+}
+
+export async function getStoredLang() {
+  try {
+    const v = await AsyncStorage.getItem('lang');
+    if (v === 'en' || v === 'tr') return v;
+  } catch {}
+  return detectSystemLang();
+}
 
 const LangContext = createContext(null);
 

@@ -712,7 +712,7 @@ export default function SubscriptionsScreen() {
 
               {/* Reminder */}
               <Dropdown
-                style={{ marginBottom: 16 }}
+                style={{ marginBottom: 6 }}
                 label={t('subReminder')}
                 value={reminderDays === null ? 'none' : reminderDays}
                 onChange={(v) => setReminderDays(v === 'none' ? null : v)}
@@ -721,6 +721,7 @@ export default function SubscriptionsScreen() {
                   label: v === null ? t('subReminderNone') : t(`subReminder${v}`),
                 }))}
               />
+              <Text style={{ color: colors.text3, fontSize: 12, marginBottom: 16, marginLeft: 2 }}>{t('subReminderHelp')}</Text>
 
               <Input label={t('subNotes')} value={subNotes} onChangeText={setSubNotes}
                 placeholder={t('subNotesPlaceholder')} multiline numberOfLines={3}

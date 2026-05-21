@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  TextInput, Modal, ScrollView, Switch, ActivityIndicator,
+  TextInput, Modal, ScrollView, Switch, ActivityIndicator, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -37,8 +37,11 @@ function emptyForm() {
     start_date: new Date().toISOString().split('T')[0],
     end_date: '',
     is_active: true,
+    reminder_days: 1,
   };
 }
+
+const RECURRING_REMINDER_OPTS = [null, 0, 1, 3];
 
 export default function RecurringScreen({ navigation }) {
   const { colors } = useTheme();
@@ -91,6 +94,7 @@ export default function RecurringScreen({ navigation }) {
       start_date: rule.start_date ? rule.start_date.split('T')[0] : new Date().toISOString().split('T')[0],
       end_date: rule.end_date ? rule.end_date.split('T')[0] : '',
       is_active: rule.is_active !== false,
+      reminder_days: rule.reminder_days === undefined || rule.reminder_days === null ? null : rule.reminder_days,
     });
     setShowModal(true);
   };
@@ -109,6 +113,7 @@ export default function RecurringScreen({ navigation }) {
       start_date: form.start_date || new Date().toISOString().split('T')[0],
       end_date: form.end_date || null,
       is_active: form.is_active,
+      reminder_days: form.reminder_days,
     };
 
     setSaving(true);
@@ -251,6 +256,10 @@ export default function RecurringScreen({ navigation }) {
           renderItem={renderRule}
           contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
           ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={7}
+          removeClippedSubviews={Platform.OS === 'android'}
         />
       )}
 
@@ -354,6 +363,19 @@ export default function RecurringScreen({ navigation }) {
 
               <DatePickerField label={t('recStartDate')} value={form.start_date} onChange={v => setForm(f => ({ ...f, start_date: v }))} style={{ marginBottom: 14 }} />
               <DatePickerField label={`${t('recEndDate')} (${t('goalOptional')})`} value={form.end_date} onChange={v => setForm(f => ({ ...f, end_date: v }))} style={{ marginBottom: 14 }} />
+
+              {/* Reminder */}
+              <Dropdown
+                style={{ marginBottom: 6 }}
+                label={t('recReminder')}
+                value={form.reminder_days === null ? 'none' : form.reminder_days}
+                onChange={(v) => setForm(f => ({ ...f, reminder_days: v === 'none' ? null : v }))}
+                options={RECURRING_REMINDER_OPTS.map(v => ({
+                  value: v === null ? 'none' : v,
+                  label: v === null ? t('subReminderNone') : v === 0 ? t('recReminderSameDay') : t(`recReminder${v}`),
+                }))}
+              />
+              <Text style={{ color: colors.text3, fontSize: 12, marginBottom: 14, marginLeft: 2 }}>{t('recReminderHelp')}</Text>
 
               {/* Active toggle */}
               <View style={s.activeRow}>

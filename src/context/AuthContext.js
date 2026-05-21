@@ -48,7 +48,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const refreshTransactions = useCallback(() => {
-    authFetch(`${API}/transactions`)
+    return authFetch(`${API}/transactions`)
       .then(res => res.json())
       .then(data => Array.isArray(data) && setTransactions(data))
       .catch(() => {});

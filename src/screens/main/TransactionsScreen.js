@@ -1,12 +1,13 @@
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, StatusBar,
-  TextInput, Modal, KeyboardAvoidingView, Platform, ActivityIndicator, FlatList, Pressable,
+  TextInput, Modal, KeyboardAvoidingView, Platform, ActivityIndicator, FlatList, Pressable, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as Haptics from 'expo-haptics';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
@@ -56,6 +57,12 @@ export default function TransactionsScreen({ navigation }) {
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
+  const [refreshing, setRefreshing] = useState(false);
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try { await refreshTransactions(); } finally { setRefreshing(false); }
+  };
+
   // Filter state
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('all');
@@ -70,6 +77,13 @@ export default function TransactionsScreen({ navigation }) {
   const [importing, setImporting] = useState(false);
   const [importPreview, setImportPreview] = useState(null); // array of parsed txs
   const [bulkImporting, setBulkImporting] = useState(false);
+  const importAbortRef = useRef(null);
+  const [editingImport, setEditingImport] = useState(null);
+  const [impEditDesc, setImpEditDesc] = useState('');
+  const [impEditAmount, setImpEditAmount] = useState('');
+  const [impEditType, setImpEditType] = useState('expense');
+  const [impEditCat, setImpEditCat] = useState('food');
+  const [impEditDate, setImpEditDate] = useState('');
 
   const categoryOptions = type === 'income' ? incomeCats : expenseCats;
   const editCatOptions = editType === 'income' ? incomeCats : expenseCats;
@@ -129,7 +143,22 @@ export default function TransactionsScreen({ navigation }) {
   };
 
   // ── Statement import ──────────────────────────────────────────────────────────
+  const compressImage = async (uri) => {
+    try {
+      const ctx = ImageManipulator.manipulate(uri);
+      ctx.resize({ width: 1600 });
+      const rendered = await ctx.renderAsync();
+      const result = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: 0.7 });
+      return result.uri;
+    } catch {
+      return uri;
+    }
+  };
+
   const uploadFile = async (uri, name, mimeType) => {
+    importAbortRef.current?.abort();
+    const controller = new AbortController();
+    importAbortRef.current = controller;
     setImporting(true);
     setImportPreview(null);
     try {
@@ -140,51 +169,101 @@ export default function TransactionsScreen({ navigation }) {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
+        signal: controller.signal,
       });
       const data = await res.json();
       if (!res.ok) { showToast(data.error || t('serverError'), 'error'); return; }
       if (!data.transactions?.length) { showToast(t('importNoTxFound'), 'error'); return; }
       setImportPreview(data.transactions.map((tx, i) => ({ ...tx, _id: i, _cat: tx.category || 'other' })));
-    } catch {
-      showToast(t('serverError'), 'error');
+    } catch (err) {
+      if (err?.name === 'AbortError') return;
+      showToast(err?.message ? `${t('serverError')}: ${err.message}` : t('serverError'), 'error');
     } finally {
+      if (importAbortRef.current === controller) importAbortRef.current = null;
       setImporting(false);
     }
+  };
+
+  const cancelImport = () => {
+    importAbortRef.current?.abort();
+    importAbortRef.current = null;
+    setImporting(false);
+  };
+
+  const closeImportModal = () => {
+    cancelImport();
+    setShowImportModal(false);
+    setImportPreview(null);
   };
 
   const pickDocument = async () => {
     const res = await DocumentPicker.getDocumentAsync({ type: ['application/pdf', 'image/*'], copyToCacheDirectory: true });
     if (res.canceled) return;
     const f = res.assets[0];
-    await uploadFile(f.uri, f.name, f.mimeType);
+    const isImage = (f.mimeType || '').startsWith('image/') || /\.(jpg|jpeg|png|heic|heif|webp)$/i.test(f.name || '');
+    if (isImage) {
+      const compressedUri = await compressImage(f.uri);
+      await uploadFile(compressedUri, 'statement.jpg', 'image/jpeg');
+    } else {
+      await uploadFile(f.uri, f.name, f.mimeType);
+    }
   };
 
   const pickImage = async () => {
     try {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) { showToast(t('permissionDenied'), 'error'); return; }
-      setShowImportModal(false);
-      await new Promise(r => setTimeout(r, 400));
-      const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.85 });
+      const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 1 });
       if (res.canceled) return;
       const f = res.assets[0];
-      await uploadFile(f.uri, 'statement.jpg', f.mimeType || 'image/jpeg');
-    } catch (e) { showToast(t('serverError'), 'error'); }
+      const compressedUri = await compressImage(f.uri);
+      await uploadFile(compressedUri, 'statement.jpg', 'image/jpeg');
+    } catch (e) { showToast(String(e?.message || e) || t('serverError'), 'error'); }
   };
 
   const takePhoto = async () => {
     try {
       const perm = await ImagePicker.requestCameraPermissionsAsync();
       if (!perm.granted) { showToast(t('permissionDenied'), 'error'); return; }
-      setShowImportModal(false);
-      await new Promise(r => setTimeout(r, 500));
-      const res = await ImagePicker.launchCameraAsync({ quality: 0.9 });
+      const res = await ImagePicker.launchCameraAsync({ quality: 1 });
       if (!res || res.canceled) return;
       const f = res.assets?.[0];
       if (!f) return;
-      setShowImportModal(true);
-      await uploadFile(f.uri, 'statement.jpg', f.mimeType || 'image/jpeg');
+      const compressedUri = await compressImage(f.uri);
+      await uploadFile(compressedUri, 'statement.jpg', 'image/jpeg');
     } catch (e) { showToast(String(e?.message || e), 'error'); }
+  };
+
+  const openImportEdit = (item) => {
+    setEditingImport(item);
+    setImpEditDesc(item.description || '');
+    setImpEditAmount(String(item.amount ?? ''));
+    setImpEditType(item.type || 'expense');
+    setImpEditCat(item._cat || (item.type === 'income' ? 'salary' : 'food'));
+    setImpEditDate((item.date || todayLocalISO()).slice(0, 10));
+  };
+
+  const saveImportEdit = () => {
+    if (!editingImport) return;
+    const amt = parseFloat(impEditAmount);
+    setImportPreview(prev => prev.map(tx =>
+      tx._id === editingImport._id
+        ? {
+            ...tx,
+            description: impEditDesc,
+            amount: isFinite(amt) && amt > 0 ? amt : tx.amount,
+            type: impEditType,
+            _cat: impEditCat,
+            date: impEditDate,
+          }
+        : tx
+    ));
+    setEditingImport(null);
+  };
+
+  const removeImportRow = (id) => {
+    setImportPreview(prev => prev.filter(tx => tx._id !== id));
+    setEditingImport(null);
   };
 
   const handleBulkImport = async () => {
@@ -205,15 +284,16 @@ export default function TransactionsScreen({ navigation }) {
       });
       const data = await res.json();
       if (res.ok) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         showToast(`${data.imported || txs.length} ${t('importSuccess')}`, 'success');
         setShowImportModal(false);
         setImportPreview(null);
         refreshTransactions();
       } else {
-        showToast(t('serverError'), 'error');
+        showToast(data?.error || t('serverError'), 'error');
       }
-    } catch {
-      showToast(t('serverError'), 'error');
+    } catch (err) {
+      showToast(err?.message ? `${t('serverError')}: ${err.message}` : t('serverError'), 'error');
     } finally {
       setBulkImporting(false);
     }
@@ -373,7 +453,11 @@ export default function TransactionsScreen({ navigation }) {
       )}
 
       {/* Transaction list */}
-      <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.brand} colors={[colors.brand]} />}
+      >
         {filtered.length === 0 ? (
           <View style={styles.empty}>
             <Text style={{ fontSize: 36, marginBottom: 12 }}>📋</Text>
@@ -457,14 +541,14 @@ export default function TransactionsScreen({ navigation }) {
       </Modal>
 
       {/* Import modal */}
-      <Modal visible={showImportModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowImportModal(false)}>
+      <Modal visible={showImportModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={closeImportModal}>
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
           {/* Header */}
           <View style={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 0 }}>
             <View style={[styles.dragHandle, { backgroundColor: colors.border }]} />
             <View style={[styles.modalHeader, { marginBottom: 0 }]}>
               <Text style={[styles.modalTitle, { color: colors.text1 }]}>{t('importTitle')}</Text>
-              <TouchableOpacity onPress={() => setShowImportModal(false)} style={[styles.closeBtn, { backgroundColor: colors.surface2 }]}>
+              <TouchableOpacity onPress={closeImportModal} style={[styles.closeBtn, { backgroundColor: colors.surface2 }]}>
                 <Ionicons name="close" size={18} color={colors.text2} />
               </TouchableOpacity>
             </View>
@@ -481,6 +565,12 @@ export default function TransactionsScreen({ navigation }) {
                 <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                   <ActivityIndicator color={colors.brand} size="large" />
                   <Text style={{ color: colors.text3, marginTop: 16, fontSize: 14 }}>{t('importAnalyzing')}</Text>
+                  <TouchableOpacity
+                    onPress={cancelImport}
+                    style={{ marginTop: 24, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: colors.border }}
+                  >
+                    <Text style={{ color: colors.text2, fontSize: 14, fontWeight: '600' }}>{t('cancelBtn')}</Text>
+                  </TouchableOpacity>
                 </View>
               ) : (
                 <View style={[styles.importCard, { borderColor: colors.border, backgroundColor: colors.surface }]}>
@@ -523,8 +613,18 @@ export default function TransactionsScreen({ navigation }) {
                 keyExtractor={item => String(item._id)}
                 contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
                 ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
-                renderItem={({ item, index }) => (
-                  <View style={[styles.txCard, { backgroundColor: colors.surface, borderColor: colors.border, flexDirection: 'column', alignItems: 'stretch', gap: 8 }]}>
+                initialNumToRender={10}
+                maxToRenderPerBatch={10}
+                windowSize={7}
+                removeClippedSubviews={Platform.OS === 'android'}
+                renderItem={({ item }) => (
+                  <Pressable
+                    onPress={() => openImportEdit(item)}
+                    style={({ pressed }) => [
+                      styles.txCard,
+                      { backgroundColor: colors.surface, borderColor: colors.border, flexDirection: 'column', alignItems: 'stretch', gap: 8, opacity: pressed ? 0.7 : 1 },
+                    ]}
+                  >
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                       <View style={{ flex: 1, minWidth: 0 }}>
                         <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text1 }} numberOfLines={1}>
@@ -536,13 +636,17 @@ export default function TransactionsScreen({ navigation }) {
                         {item.type === 'income' ? '+' : '-'}{fmt(item.amount)}
                       </Text>
                     </View>
-                    <Dropdown
-                      value={item._cat}
-                      onChange={(val) => setImportPreview(prev => prev.map((tx, i) => i === index ? { ...tx, _cat: val } : tx))}
-                      leftDot={getCatColor(item._cat, item.type)}
-                      options={(item.type === 'income' ? incomeCats : expenseCats).map(c => ({ value: c, label: t(c), dot: getCatColor(c, item.type) }))}
-                    />
-                  </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: getCatColor(item._cat, item.type) }} />
+                        <Text style={{ fontSize: 12, color: colors.text2 }}>{t(item._cat)}</Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <Ionicons name="create-outline" size={14} color={colors.text3} />
+                        <Text style={{ fontSize: 12, color: colors.text3 }}>{t('editBtn')}</Text>
+                      </View>
+                    </View>
+                  </Pressable>
                 )}
               />
               <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, backgroundColor: colors.bg, borderTopWidth: 1, borderTopColor: colors.border }}>
@@ -565,6 +669,54 @@ export default function TransactionsScreen({ navigation }) {
               </View>
             </View>
           )}
+
+          {/* Import row edit modal (overlay) */}
+          <Modal visible={!!editingImport} transparent animationType="slide" onRequestClose={() => setEditingImport(null)}>
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+              <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }} onPress={() => setEditingImport(null)}>
+                <Pressable onPress={() => {}} style={[styles.deleteSheet, { backgroundColor: colors.surface, paddingBottom: 32 }]}>
+                  <View style={[styles.dragHandle, { backgroundColor: colors.border, alignSelf: 'center', marginBottom: 16 }]} />
+                  <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                    <Text style={[styles.modalTitle, { color: colors.text1, marginBottom: 20 }]}>{t('editBtn')}</Text>
+
+                    <Input label={t('description')} value={impEditDesc} onChangeText={setImpEditDesc} placeholder={t('descriptionPlaceholder')} style={{ marginBottom: 16 }} />
+                    <Input label={t('amount')} value={impEditAmount} onChangeText={setImpEditAmount} placeholder="0.00" keyboardType="decimal-pad" autoCapitalize="none" style={{ marginBottom: 16 }} />
+
+                    <Text style={[styles.fieldLabel, { color: colors.text3 }]}>{t('type')}</Text>
+                    <View style={[styles.toggle, { backgroundColor: colors.surface2, borderColor: colors.border }]}>
+                      {['expense', 'income'].map(tp => (
+                        <TouchableOpacity key={tp} onPress={() => { setImpEditType(tp); setImpEditCat(tp === 'income' ? 'salary' : 'food'); }}
+                          style={[styles.toggleBtn, impEditType === tp && { backgroundColor: tp === 'income' ? colors.green : colors.red }]}>
+                          <Text style={{ color: impEditType === tp ? '#fff' : colors.text3, fontSize: 13, fontWeight: '600' }}>
+                            {tp === 'income' ? `+ ${t('incomeOption')}` : `- ${t('expenseOption')}`}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+
+                    <Dropdown
+                      style={{ marginTop: 16, marginBottom: 16 }}
+                      label={t('category')}
+                      value={impEditCat}
+                      onChange={setImpEditCat}
+                      leftDot={getCatColor(impEditCat, impEditType)}
+                      options={(impEditType === 'income' ? incomeCats : expenseCats).map(c => ({ value: c, label: t(c), dot: getCatColor(c, impEditType) }))}
+                    />
+
+                    <DatePickerField label={t('date')} value={impEditDate} onChange={setImpEditDate} style={{ marginBottom: 24 }} />
+
+                    <Button title={t('saveBtn')} onPress={saveImportEdit} />
+                    <TouchableOpacity
+                      style={{ marginTop: 12, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: colors.red, alignItems: 'center' }}
+                      onPress={() => editingImport && removeImportRow(editingImport._id)}
+                    >
+                      <Text style={{ color: colors.red, fontWeight: '600', fontSize: 14 }}>{t('deleteBtn')}</Text>
+                    </TouchableOpacity>
+                  </ScrollView>
+                </Pressable>
+              </Pressable>
+            </KeyboardAvoidingView>
+          </Modal>
         </SafeAreaView>
       </Modal>
 
