@@ -3,9 +3,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import { useLang } from '../../context/LangContext';
+import { Ionicons } from '@expo/vector-icons';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
 import { API } from '../../utils/api';
+import { spacing, radius, type, fonts } from '../../constants/tokens';
 
 export default function ForgotPasswordScreen({ navigation }) {
   const { colors, isDark } = useTheme();
@@ -36,30 +38,30 @@ export default function ForgotPasswordScreen({ navigation }) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.bg} />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, padding: 20 }}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 32 }}>
-          <Text style={{ color: colors.text3, fontSize: 14 }}>← Back</Text>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, padding: spacing.xl }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: spacing['3xl'] }}>
+          <Text style={{ color: colors.text3, fontFamily: fonts.body, fontSize: 14 }}>← Back</Text>
         </TouchableOpacity>
 
         {sent ? (
           <View style={{ alignItems: 'center', marginTop: 60 }}>
-            <Text style={{ fontSize: 48, marginBottom: 20 }}>📧</Text>
-            <Text style={{ fontSize: 20, fontWeight: '700', color: colors.text1, marginBottom: 12 }}>{t('resetEmailSent')}</Text>
+            <Ionicons name="mail-outline" size={56} color={colors.brand} style={{ marginBottom: spacing.xl }} />
+            <Text style={{ ...type.h2Serif, fontSize: 24, color: colors.text1, marginBottom: spacing.md }}>{t('resetEmailSent')}</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text style={{ color: colors.brand, fontSize: 15, fontWeight: '600' }}>{t('backToSignIn')}</Text>
+              <Text style={{ color: colors.brand, fontFamily: fonts.bodySemibold, fontSize: 15 }}>{t('backToSignIn')}</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Text style={[styles.title, { color: colors.text1 }]}>{t('forgotPasswordTitle')}</Text>
             <Text style={[styles.desc, { color: colors.text2 }]}>{t('forgotPasswordDesc')}</Text>
-            <Input label={t('email')} value={email} onChangeText={setEmail} placeholder={t('emailPlaceholder')} keyboardType="email-address" autoCapitalize="none" style={{ marginBottom: 16 }} />
+            <Input label={t('email')} value={email} onChangeText={setEmail} placeholder={t('emailPlaceholder')} keyboardType="email-address" autoCapitalize="none" style={{ marginBottom: spacing.lg }} />
             {!!error && (
               <View style={[styles.errorBox, { backgroundColor: `${colors.red}18`, borderColor: `${colors.red}44` }]}>
-                <Text style={{ color: colors.red, fontSize: 13 }}>{error}</Text>
+                <Text style={{ color: colors.red, ...type.small, fontSize: 13 }}>{error}</Text>
               </View>
             )}
-            <Button title={loading ? t('sendingResetLink') : t('sendResetLink')} onPress={handleSend} loading={loading} disabled={!email.trim()} style={{ marginTop: 12 }} />
+            <Button title={loading ? t('sendingResetLink') : t('sendResetLink')} onPress={handleSend} loading={loading} disabled={!email.trim()} style={{ marginTop: spacing.md }} />
           </View>
         )}
       </KeyboardAvoidingView>
@@ -68,8 +70,8 @@ export default function ForgotPasswordScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  card: { padding: 24, borderRadius: 18, borderWidth: 1 },
-  title: { fontSize: 20, fontWeight: '700', marginBottom: 8, letterSpacing: -0.3 },
-  desc: { fontSize: 14, lineHeight: 20, marginBottom: 20 },
-  errorBox: { padding: 12, borderRadius: 10, borderWidth: 1, marginTop: 8 },
+  card: { padding: spacing['2xl'], borderRadius: radius.lg + 2, borderWidth: 1 },
+  title: { ...type.h2Serif, fontSize: 22, marginBottom: spacing.sm },
+  desc: { ...type.body, fontSize: 14, lineHeight: 20, marginBottom: spacing.xl },
+  errorBox: { padding: spacing.md, borderRadius: radius.sm + 2, borderWidth: 1, marginTop: spacing.sm },
 });

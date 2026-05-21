@@ -9,6 +9,15 @@ function itemKey(tempId) {
   return `${ITEM_PREFIX}${tempId.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
 }
 
+let listeners = [];
+export function onQueueChange(fn) {
+  listeners.push(fn);
+  return () => { listeners = listeners.filter(l => l !== fn); };
+}
+function emitChange() {
+  for (const l of listeners) { try { l(); } catch {} }
+}
+
 async function readIndex() {
   try {
     const raw = await AsyncStorage.getItem(INDEX_KEY);
@@ -56,6 +65,7 @@ export async function enqueue(item) {
   const ids = await readIndex();
   ids.push(item.tempId);
   await writeIndex(ids);
+  emitChange();
 }
 
 export async function getQueue() {
@@ -76,6 +86,7 @@ export async function removeFromQueue(tempId) {
   try { await SecureStore.deleteItemAsync(itemKey(tempId)); } catch {}
   const ids = await readIndex();
   await writeIndex(ids.filter(id => id !== tempId));
+  emitChange();
 }
 
 export async function findInQueue(tempId) {
@@ -109,4 +120,11 @@ export async function clearQueue() {
     try { await SecureStore.deleteItemAsync(itemKey(id)); } catch {}
   }
   await AsyncStorage.removeItem(INDEX_KEY);
+  emitChange();
+}
+
+export async function getQueueLength() {
+  await ensureMigrated();
+  const ids = await readIndex();
+  return ids.length;
 }

@@ -9,6 +9,7 @@ import { authenticateWithBiometrics } from '../../utils/biometric';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
 import { API } from '../../utils/api';
+import { spacing, radius, type, fonts } from '../../constants/tokens';
 
 export default function LoginScreen({ navigation }) {
   const { colors, isDark } = useTheme();
@@ -65,7 +66,7 @@ export default function LoginScreen({ navigation }) {
             onPress={() => navigation.reset({ index: 0, routes: [{ name: 'Landing' }] })}
             style={styles.backBtn}
           >
-            <Text style={{ color: colors.text3, fontSize: 14 }}>← {t('backToLanding')}</Text>
+            <Text style={{ color: colors.text3, fontFamily: fonts.body, fontSize: 14 }}>← {t('backToLanding')}</Text>
           </TouchableOpacity>
 
           {/* Brand */}
@@ -105,7 +106,7 @@ export default function LoginScreen({ navigation }) {
                 <Text style={[styles.fieldLabel, { color: colors.text3 }]}>{t('password')}</Text>
                 {loginMethod === 'email' && (
                   <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
-                    <Text style={{ color: colors.brand, fontSize: 13, fontWeight: '600' }}>{t('forgotPassword')}</Text>
+                    <Text style={{ color: colors.brand, fontFamily: fonts.bodySemibold, fontSize: 13 }}>{t('forgotPassword')}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -114,7 +115,7 @@ export default function LoginScreen({ navigation }) {
 
             {!!error && (
               <View style={[styles.errorBox, { backgroundColor: `${colors.red}18`, borderColor: `${colors.red}44` }]}>
-                <Text style={{ color: colors.red, fontSize: 13 }}>{error}</Text>
+                <Text style={{ color: colors.red, ...type.small, fontSize: 13 }}>{error}</Text>
               </View>
             )}
 
@@ -131,9 +132,9 @@ export default function LoginScreen({ navigation }) {
           </View>
 
           <View style={styles.switchRow}>
-            <Text style={{ color: colors.text2, fontSize: 14 }}>{t('noAccount')} </Text>
+            <Text style={{ color: colors.text2, fontFamily: fonts.body, fontSize: 14 }}>{t('noAccount')} </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-              <Text style={{ color: colors.brand, fontSize: 14, fontWeight: '600' }}>{t('registerLink')}</Text>
+              <Text style={{ color: colors.brand, fontFamily: fonts.bodySemibold, fontSize: 14 }}>{t('registerLink')}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -143,21 +144,21 @@ export default function LoginScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { paddingHorizontal: 20, paddingBottom: 40, paddingTop: 8 },
-  backBtn: { marginBottom: 24 },
-  brand: { alignItems: 'center', marginBottom: 32 },
-  brandIcon: { width: 96, height: 96, marginBottom: 4 },
-  brandName: { fontSize: 24, fontWeight: '700', letterSpacing: -0.5 },
-  brandSub: { fontSize: 14, marginTop: 4 },
-  card: { padding: 24, borderRadius: 18, borderWidth: 1, marginBottom: 20 },
-  cardTitle: { fontSize: 17, fontWeight: '600', marginBottom: 20 },
-  toggle: { flexDirection: 'row', borderRadius: 10, padding: 4, borderWidth: 1, marginBottom: 20, gap: 4 },
-  toggleBtn: { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
-  toggleText: { fontSize: 13, fontWeight: '600' },
-  fieldLabel: { fontSize: 11, fontWeight: '600', letterSpacing: 0.5, textTransform: 'uppercase' },
-  errorBox: { padding: 12, borderRadius: 10, borderWidth: 1, marginTop: 8 },
+  container: { paddingHorizontal: spacing.xl, paddingBottom: spacing['4xl'], paddingTop: spacing.sm },
+  backBtn: { marginBottom: spacing['2xl'] },
+  brand: { alignItems: 'center', marginBottom: spacing['3xl'] },
+  brandIcon: { width: 96, height: 96, marginBottom: spacing.xs },
+  brandName: { ...type.h1Serif, fontSize: 28 },
+  brandSub: { ...type.body, fontSize: 14, marginTop: spacing.xs },
+  card: { padding: spacing['2xl'], borderRadius: radius.lg + 2, borderWidth: 1, marginBottom: spacing.xl },
+  cardTitle: { ...type.h2Serif, fontSize: 20, marginBottom: spacing.xl },
+  toggle: { flexDirection: 'row', borderRadius: radius.sm + 2, padding: spacing.xs, borderWidth: 1, marginBottom: spacing.xl, gap: spacing.xs },
+  toggleBtn: { flex: 1, paddingVertical: spacing.sm, borderRadius: radius.sm, alignItems: 'center' },
+  toggleText: { fontFamily: fonts.bodySemibold, fontSize: 13 },
+  fieldLabel: { ...type.label, fontSize: 10 },
+  errorBox: { padding: spacing.md, borderRadius: radius.sm + 2, borderWidth: 1, marginTop: spacing.sm },
   switchRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
-  bioRow: { alignItems: 'center', marginTop: 20, gap: 8 },
+  bioRow: { alignItems: 'center', marginTop: spacing.xl, gap: spacing.sm },
   bioBtn: { width: 56, height: 56, borderRadius: 28, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
-  bioLabel: { fontSize: 12 },
+  bioLabel: { ...type.small, fontSize: 12 },
 });

@@ -13,17 +13,18 @@ import { useToast } from '../../context/ToastContext';
 import { API, authFetch } from '../../utils/api';
 import { isBiometricAvailable, getBiometricLockEnabled, setBiometricLockEnabled, authenticateWithBiometrics } from '../../utils/biometric';
 import { CURRENCIES } from '../../constants/currencies';
+import { spacing, radius, type, fonts } from '../../constants/tokens';
 import Dropdown from '../../components/Dropdown';
 
 function Section({ title, children, colors }) {
   return (
-    <View style={{ marginBottom: 16 }}>
+    <View style={{ marginBottom: spacing.lg }}>
       <Text style={{
-        color: colors.text3, fontSize: 11, fontWeight: '700',
-        letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8, paddingHorizontal: 4,
+        ...type.label, color: colors.text3,
+        marginBottom: spacing.sm, paddingHorizontal: spacing.xs,
       }}>{title}</Text>
       <View style={{
-        backgroundColor: colors.surface, borderRadius: 16,
+        backgroundColor: colors.surface, borderRadius: radius.lg,
         borderWidth: 1, borderColor: colors.border, overflow: 'hidden',
       }}>
         {children}
@@ -337,111 +338,108 @@ export default function ProfileScreen() {
 
 const makeStyles = (colors) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
-  container: { padding: 16, paddingBottom: 48 },
+  container: { padding: spacing.lg, paddingBottom: spacing['4xl'] + spacing.sm },
 
-  header: { alignItems: 'center', marginBottom: 28, paddingTop: 8 },
+  header: { alignItems: 'center', marginBottom: spacing['2xl'] + 4, paddingTop: spacing.sm },
   avatar: {
     width: 76, height: 76, borderRadius: 38,
     backgroundColor: colors.brandDim, borderWidth: 2.5, borderColor: colors.brand,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 12,
+    alignItems: 'center', justifyContent: 'center', marginBottom: spacing.md,
   },
-  avatarText: { fontSize: 30, fontWeight: '800', color: colors.brand },
-  headerTitle: { fontSize: 22, fontWeight: '700', color: colors.text1 },
-  headerSub: { fontSize: 13, color: colors.text3, marginTop: 4 },
+  avatarText: { fontFamily: fonts.serif, fontSize: 32, color: colors.brand, letterSpacing: -0.5 },
+  headerTitle: { ...type.h2Serif, fontSize: 26, color: colors.text1 },
+  headerSub: { ...type.caption, color: colors.text3, marginTop: spacing.xs },
 
-  nameRow: { flexDirection: 'row', alignItems: 'center', padding: 12, gap: 8 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', padding: spacing.md, gap: spacing.sm },
   nameInput: {
-    flex: 1, fontSize: 15, color: colors.text1,
-    borderWidth: 1, borderColor: colors.border, borderRadius: 10,
-    paddingHorizontal: 12, paddingVertical: 10, backgroundColor: colors.bg,
+    flex: 1, fontFamily: fonts.body, fontSize: 15, color: colors.text1,
+    borderWidth: 1, borderColor: colors.border, borderRadius: radius.md,
+    paddingHorizontal: spacing.md, paddingVertical: spacing.sm + 2, backgroundColor: colors.bg,
   },
   saveBtn: {
-    backgroundColor: colors.brand, borderRadius: 10,
-    paddingHorizontal: 16, paddingVertical: 10,
+    backgroundColor: colors.brand, borderRadius: radius.md,
+    paddingHorizontal: spacing.lg, paddingVertical: spacing.sm + 2,
   },
-  saveBtnText: { color: colors.bg, fontWeight: '700', fontSize: 14 },
+  saveBtnText: { color: colors.bg, fontFamily: fonts.bodySemibold, fontSize: 14, letterSpacing: -0.2 },
 
-  linkedRow: { flexDirection: 'row', alignItems: 'center', padding: 14, gap: 10 },
+  linkedRow: { flexDirection: 'row', alignItems: 'center', padding: spacing.md + 2, gap: spacing.sm + 2 },
   linkedDivider: { borderTopWidth: 1, borderTopColor: colors.border },
-  linkedLabel: { fontSize: 14, color: colors.text2, width: 56 },
-  linkedValue: { flex: 1, fontSize: 14, color: colors.text1, textAlign: 'right' },
+  linkedLabel: { ...type.bodyMd, color: colors.text2, width: 56 },
+  linkedValue: { flex: 1, ...type.bodyMd, color: colors.text1, textAlign: 'right' },
   notLinked: { color: colors.text3, fontStyle: 'italic' },
 
-  currencyGrid: { flexDirection: 'row', flexWrap: 'wrap', padding: 10, gap: 8 },
+  currencyGrid: { flexDirection: 'row', flexWrap: 'wrap', padding: spacing.sm + 2, gap: spacing.sm },
   currencyItem: {
-    width: '22%', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 4,
+    width: '22%', borderRadius: radius.md, paddingVertical: spacing.sm + 2, paddingHorizontal: spacing.xs,
     alignItems: 'center', borderWidth: 1.5, borderColor: colors.border,
     backgroundColor: colors.bg,
   },
   currencyItemActive: { borderColor: colors.brand, backgroundColor: colors.brandDim },
-  currencySymbol: { fontSize: 20, fontWeight: '700', color: colors.text1 },
-  currencyCode: { fontSize: 11, color: colors.text2, marginTop: 2, fontWeight: '600' },
+  currencySymbol: { fontFamily: fonts.monoMedium, fontSize: 20, color: colors.text1 },
+  currencyCode: { fontFamily: fonts.mono, fontSize: 11, color: colors.text2, marginTop: 2 },
 
   signOutBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 8, paddingVertical: 14, marginVertical: 8,
-    backgroundColor: colors.surface, borderRadius: 16,
+    gap: spacing.sm, paddingVertical: spacing.md + 2, marginVertical: spacing.sm,
+    backgroundColor: colors.surface, borderRadius: radius.lg,
     borderWidth: 1, borderColor: colors.border,
   },
-  signOutText: { fontSize: 15, fontWeight: '600', color: colors.red },
+  signOutText: { ...type.body, fontFamily: fonts.bodySemibold, color: colors.red },
 
-  prefRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 12 },
+  prefRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.md + 2, paddingVertical: spacing.md },
   prefDivider: { borderTopWidth: 1, borderTopColor: colors.border },
-  prefLabel: { flex: 1, fontSize: 14, fontWeight: '500', color: colors.text1 },
+  prefLabel: { flex: 1, ...type.bodyMd, fontFamily: fonts.bodyMedium, color: colors.text1 },
   prefDropdown: { minWidth: 140 },
 
-  legalRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, paddingVertical: 4, marginBottom: 4 },
-  legalLink: { fontSize: 12, color: colors.text3, textDecorationLine: 'underline' },
-  legalDot: { fontSize: 12, color: colors.text3 },
+  legalRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xs, marginBottom: spacing.xs },
+  legalLink: { ...type.small, color: colors.text3, textDecorationLine: 'underline' },
+  legalDot: { ...type.small, color: colors.text3 },
 
   advancedToggle: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 6, paddingVertical: 10, marginTop: 12,
+    gap: spacing.xs + 2, paddingVertical: spacing.sm + 2, marginTop: spacing.md,
   },
-  advancedToggleText: { fontSize: 13, color: colors.text3, fontWeight: '600' },
+  advancedToggleText: { ...type.caption, fontFamily: fonts.bodySemibold, color: colors.text3 },
 
   dangerBox: {
-    marginTop: 8, padding: 16, borderRadius: 16,
+    marginTop: spacing.sm, padding: spacing.lg, borderRadius: radius.lg,
     borderWidth: 1.5, borderColor: colors.red + '50',
     backgroundColor: colors.red + '0A',
   },
-  dangerTitle: {
-    fontSize: 12, fontWeight: '700', color: colors.red,
-    textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8,
-  },
-  dangerDesc: { fontSize: 13, color: colors.text2, lineHeight: 18, marginBottom: 14 },
+  dangerTitle: { ...type.label, color: colors.red, marginBottom: spacing.sm },
+  dangerDesc: { ...type.caption, color: colors.text2, marginBottom: spacing.md + 2 },
   deleteBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingVertical: 9, paddingHorizontal: 14, borderRadius: 10,
+    flexDirection: 'row', alignItems: 'center', gap: spacing.xs + 2,
+    paddingVertical: spacing.sm + 1, paddingHorizontal: spacing.md + 2, borderRadius: radius.md,
     borderWidth: 1, borderColor: colors.red, alignSelf: 'flex-start',
   },
-  deleteBtnText: { fontSize: 14, fontWeight: '600', color: colors.red },
+  deleteBtnText: { ...type.bodyMd, fontFamily: fonts.bodySemibold, color: colors.red },
 
   overlay: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.65)',
-    alignItems: 'center', justifyContent: 'center', padding: 20,
+    alignItems: 'center', justifyContent: 'center', padding: spacing.xl,
   },
   modalBox: {
     width: '100%', backgroundColor: colors.surface,
-    borderRadius: 20, padding: 24, borderWidth: 1, borderColor: colors.border,
+    borderRadius: radius.xl, padding: spacing['2xl'], borderWidth: 1, borderColor: colors.border,
   },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: colors.text1, marginBottom: 8 },
-  modalDesc: { fontSize: 13, color: colors.text2, lineHeight: 18, marginBottom: 16 },
-  modalLabel: { fontSize: 13, fontWeight: '600', color: colors.text2, marginBottom: 6 },
+  modalTitle: { ...type.h2Serif, fontSize: 22, color: colors.text1, marginBottom: spacing.sm },
+  modalDesc: { ...type.caption, color: colors.text2, marginBottom: spacing.lg },
+  modalLabel: { ...type.label, color: colors.text2, marginBottom: spacing.xs + 2 },
   modalInput: {
-    borderWidth: 1, borderColor: colors.border, borderRadius: 10,
-    paddingHorizontal: 12, paddingVertical: 10,
-    color: colors.text1, fontSize: 14, backgroundColor: colors.bg, marginBottom: 14,
+    borderWidth: 1, borderColor: colors.border, borderRadius: radius.md,
+    paddingHorizontal: spacing.md, paddingVertical: spacing.sm + 2,
+    color: colors.text1, fontFamily: fonts.body, fontSize: 14, backgroundColor: colors.bg, marginBottom: spacing.md + 2,
   },
-  modalActions: { flexDirection: 'row', gap: 10, marginTop: 4 },
+  modalActions: { flexDirection: 'row', gap: spacing.sm + 2, marginTop: spacing.xs },
   cancelBtn: {
-    flex: 1, paddingVertical: 12, borderRadius: 12,
+    flex: 1, paddingVertical: spacing.md, borderRadius: radius.md,
     borderWidth: 1, borderColor: colors.border, alignItems: 'center',
   },
-  cancelText: { color: colors.text1, fontWeight: '600' },
+  cancelText: { color: colors.text1, fontFamily: fonts.bodySemibold, fontSize: 14 },
   confirmBtn: {
-    flex: 1, paddingVertical: 12, borderRadius: 12,
+    flex: 1, paddingVertical: spacing.md, borderRadius: radius.md,
     backgroundColor: colors.red, alignItems: 'center',
   },
-  confirmText: { color: '#fff', fontWeight: '700' },
+  confirmText: { color: '#fff', fontFamily: fonts.bodyBold, fontSize: 14 },
 });

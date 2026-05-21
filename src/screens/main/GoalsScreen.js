@@ -15,6 +15,7 @@ import Card from '../../components/Card';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
 import DatePickerField from '../../components/DatePickerField';
+import { spacing, radius, type, fonts } from '../../constants/tokens';
 
 const EMOJIS = ['🎯', '✈️', '🏠', '🚗', '💍', '📱', '🎓', '💰', '🏖️', '🎮', '🏋️', '🎸'];
 
@@ -29,6 +30,7 @@ export default function GoalsScreen() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingGoal, setEditingGoal] = useState(null);
+  const [detailGoal, setDetailGoal] = useState(null);
 
   const [goalName, setGoalName] = useState('');
   const [goalEmoji, setGoalEmoji] = useState('🎯');
@@ -52,12 +54,13 @@ export default function GoalsScreen() {
   };
 
   const openEdit = (g) => {
+    setDetailGoal(null);
     setEditingGoal(g);
     setGoalName(g.name || '');
     setGoalEmoji(g.emoji || '🎯');
     setGoalTarget(String(g.target_amount || ''));
     setGoalSaved(String(g.saved_amount || ''));
-    setGoalDate(g.target_date || '');
+    setGoalDate(g.target_date ? String(g.target_date).split('T')[0] : '');
     setShowModal(true);
   };
 
@@ -104,6 +107,7 @@ export default function GoalsScreen() {
   };
 
   const handleDelete = (g) => {
+    setDetailGoal(null);
     setDeleteTarget(g);
   };
 
@@ -128,8 +132,12 @@ export default function GoalsScreen() {
     const pct = target > 0 ? Math.min(100, Math.round((saved / target) * 100)) : 0;
     if (pct >= 100) return { label: t('goalComplete'), color: colors.green, pct };
     if (!g.target_date) return { label: null, color: null, pct };
-    const due = new Date(g.target_date + 'T00:00:00');
+    const dateOnly = String(g.target_date).split('T')[0];
+    const [y, m, d] = dateOnly.split('-').map(Number);
+    if (!y || !m || !d) return { label: null, color: null, pct };
+    const due = new Date(y, m - 1, d);
     const now = new Date();
+    now.setHours(0, 0, 0, 0);
     const diffDays = Math.round((due - now) / 86400000);
     if (diffDays < 0) return { label: t('goalOverdue'), color: colors.red, pct };
     if (diffDays === 0) return { label: t('goalToday'), color: colors.gold, pct };
@@ -143,7 +151,7 @@ export default function GoalsScreen() {
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Text style={[styles.headerTitle, { color: colors.text1 }]}>{t('navGoals')}</Text>
         <TouchableOpacity onPress={openAdd} style={[styles.addBtn, { backgroundColor: colors.brand }]}>
-          <Text style={{ color: '#fff', fontSize: 20, lineHeight: 24 }}>+</Text>
+          <Ionicons name="add" size={22} color="#fff" />
         </TouchableOpacity>
       </View>
 
@@ -169,7 +177,7 @@ export default function GoalsScreen() {
                   <Text style={[styles.summaryValue, { color: colors.green }]} numberOfLines={1} adjustsFontSizeToFit>
                     {symbol}{fmt(totalSaved)}
                   </Text>
-                  <Text style={[styles.summarySub, { color: colors.brand, fontWeight: '700' }]}>
+                  <Text style={[styles.summarySub, { color: colors.brand, fontFamily: fonts.monoMedium }]}>
                     {overallPct.toFixed(0)}%
                   </Text>
                 </View>
@@ -183,7 +191,7 @@ export default function GoalsScreen() {
 
         {goals.length === 0 ? (
           <View style={styles.empty}>
-            <Text style={{ fontSize: 40, marginBottom: 16 }}>🎯</Text>
+            <Ionicons name="flag-outline" size={44} color={colors.text3} style={{ marginBottom: spacing.lg }} />
             <Text style={[styles.emptyText, { color: colors.text3 }]}>{t('goalEmpty')}</Text>
           </View>
         ) : (
@@ -195,51 +203,117 @@ export default function GoalsScreen() {
             const barColor = done ? colors.green : colors.brand;
 
             return (
-              <Card key={g.id} style={[styles.goalCard, { borderColor: colors.border }]}>
-                <View style={styles.goalTop}>
-                  <Text style={{ fontSize: 32 }}>{g.emoji}</Text>
-                  <View style={{ flex: 1, marginLeft: 12 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <Text style={[styles.goalName, { color: colors.text1 }]} numberOfLines={1}>{g.name}</Text>
-                      {label && (
-                        <View style={[styles.badge, { backgroundColor: `${color || colors.brand}18` }]}>
-                          <Text style={[styles.badgeText, { color: color || colors.brand }]}>{label}</Text>
-                        </View>
-                      )}
-                    </View>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
-                      <Text style={[styles.goalAmts, { color: colors.text3 }]}>
-                        {symbol}{fmt(saved)} / {symbol}{fmt(target)}
-                      </Text>
-                      <Text style={[styles.goalPct, { color: barColor }]}>{pct}%</Text>
+              <TouchableOpacity key={g.id} activeOpacity={0.8} onPress={() => setDetailGoal(g)}>
+                <Card style={[styles.goalCard, { borderColor: colors.border }]}>
+                  <View style={styles.goalTop}>
+                    <Text style={{ fontSize: 32 }}>{g.emoji}</Text>
+                    <View style={{ flex: 1, marginLeft: 12 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Text style={[styles.goalName, { color: colors.text1 }]} numberOfLines={1}>{g.name}</Text>
+                        {label && (
+                          <View style={[styles.badge, { backgroundColor: `${color || colors.brand}18` }]}>
+                            <Text style={[styles.badgeText, { color: color || colors.brand }]}>{label}</Text>
+                          </View>
+                        )}
+                      </View>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
+                        <Text style={[styles.goalAmts, { color: colors.text3 }]}>
+                          {symbol}{fmt(saved)} / {symbol}{fmt(target)}
+                        </Text>
+                        <Text style={[styles.goalPct, { color: barColor }]}>{pct}%</Text>
+                      </View>
                     </View>
                   </View>
-                </View>
 
-                <View style={[styles.progressTrack, { backgroundColor: colors.surface2 }]}>
-                  <View style={[styles.progressFill, { width: `${pct}%`, backgroundColor: barColor }]} />
-                </View>
+                  <View style={[styles.progressTrack, { backgroundColor: colors.surface2 }]}>
+                    <View style={[styles.progressFill, { width: `${pct}%`, backgroundColor: barColor }]} />
+                  </View>
 
-                {!done && (
-                  <Text style={[styles.remaining, { color: colors.text3 }]}>
-                    {symbol}{fmt(target - saved)} {t('goalRemaining')}
-                    {g.target_date ? ` · ${formatDate(g.target_date)}` : ''}
-                  </Text>
-                )}
-
-                <View style={styles.goalActions}>
-                  <TouchableOpacity onPress={() => openEdit(g)}>
-                    <Text style={{ color: colors.brand, fontSize: 13, fontWeight: '600' }}>{t('editBtn')}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => handleDelete(g)}>
-                    <Text style={{ color: colors.red, fontSize: 13, fontWeight: '600' }}>{t('deleteBtn')}</Text>
-                  </TouchableOpacity>
-                </View>
-              </Card>
+                  {!done && (
+                    <Text style={[styles.remaining, { color: colors.text3 }]}>
+                      {symbol}{fmt(target - saved)} {t('goalRemaining')}
+                      {g.target_date ? ` · ${formatDate(g.target_date)}` : ''}
+                    </Text>
+                  )}
+                </Card>
+              </TouchableOpacity>
             );
           })
         )}
       </ScrollView>
+
+      <Modal visible={!!detailGoal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setDetailGoal(null)}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+          {detailGoal && (() => {
+            const { label, color, pct } = getStatus(detailGoal);
+            const target = parseFloat(detailGoal.target_amount) || 0;
+            const saved = parseFloat(detailGoal.saved_amount || 0);
+            const remaining = Math.max(0, target - saved);
+            const done = pct >= 100;
+            const barColor = done ? colors.green : colors.brand;
+            const dateLabel = detailGoal.target_date ? formatDate(detailGoal.target_date) : '—';
+            const stats = [
+              [t('goalTarget'), `${symbol}${fmt(target)}`],
+              [t('goalSaved'), `${symbol}${fmt(saved)}`],
+              [t('goalRemaining'), `${symbol}${fmt(remaining)}`],
+              [t('goalTargetDate'), dateLabel],
+            ];
+            return (
+              <ScrollView contentContainerStyle={{ padding: spacing.lg }}>
+                <View style={[styles.detailContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <View style={[styles.detailHeader, { borderBottomColor: colors.border }]}>
+                    <Text style={{ fontSize: 40 }}>{detailGoal.emoji}</Text>
+                    <View style={{ flex: 1, marginLeft: 12, minWidth: 0 }}>
+                      <Text style={[styles.detailName, { color: colors.text1 }]} numberOfLines={1}>{detailGoal.name}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                        <Text style={{ color: barColor, fontFamily: fonts.monoMedium, fontSize: 14 }}>{pct}%</Text>
+                        {label && (
+                          <View style={[styles.badge, { backgroundColor: `${color || colors.brand}18` }]}>
+                            <Text style={[styles.badgeText, { color: color || colors.brand }]}>{label}</Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                    <TouchableOpacity onPress={() => setDetailGoal(null)} style={{ padding: 4 }}>
+                      <Ionicons name="close" size={22} color={colors.text3} />
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.lg }}>
+                    <View style={[styles.progressTrack, { backgroundColor: colors.surface2, height: 8 }]}>
+                      <View style={[styles.progressFill, { width: `${pct}%`, backgroundColor: barColor }]} />
+                    </View>
+                  </View>
+
+                  <View style={[styles.statsGrid, { borderColor: colors.border }]}>
+                    {stats.map(([lbl, value], i) => (
+                      <View key={lbl} style={[styles.statCell, {
+                        backgroundColor: colors.surface2,
+                        borderRightColor: colors.border,
+                        borderBottomColor: colors.border,
+                        borderRightWidth: i % 2 === 0 ? 1 : 0,
+                        borderBottomWidth: i < 2 ? 1 : 0,
+                      }]}>
+                        <Text style={[styles.statLabel, { color: colors.text3 }]}>{lbl}</Text>
+                        <Text style={[styles.statValue, { color: colors.text1 }]}>{value}</Text>
+                      </View>
+                    ))}
+                  </View>
+
+                  <View style={styles.detailBtns}>
+                    <TouchableOpacity onPress={() => openEdit(detailGoal)} style={[styles.detailBtn, { backgroundColor: colors.surface2, borderColor: colors.border }]}>
+                      <Text style={{ color: colors.text1, fontFamily: fonts.bodySemibold, fontSize: 14 }}>{t('editBtn')}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => handleDelete(detailGoal)} style={[styles.detailBtn, { backgroundColor: `${colors.red}15`, borderColor: `${colors.red}40` }]}>
+                      <Text style={{ color: colors.red, fontFamily: fonts.bodySemibold, fontSize: 14 }}>{t('deleteBtn')}</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </ScrollView>
+            );
+          })()}
+        </SafeAreaView>
+      </Modal>
 
       <Modal visible={showModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowModal(false)}>
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -287,15 +361,15 @@ export default function GoalsScreen() {
             <Text style={[styles.deleteSub, { color: colors.text3 }]} numberOfLines={2}>
               {deleteTarget?.emoji} {deleteTarget?.name}
               {'\n'}
-              <Text style={{ fontWeight: '600', color: colors.text2 }}>
+              <Text style={{ fontFamily: fonts.monoMedium, color: colors.text2 }}>
                 {symbol}{fmt(deleteTarget?.target_amount)}
               </Text>
             </Text>
             <TouchableOpacity style={[styles.deleteConfirmBtn, { backgroundColor: colors.red }]} onPress={confirmDelete}>
-              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>{t('deleteBtn')}</Text>
+              <Text style={{ color: '#fff', fontFamily: fonts.bodySemibold, fontSize: 15 }}>{t('deleteBtn')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.deleteCancelBtn, { borderColor: colors.border }]} onPress={() => setDeleteTarget(null)}>
-              <Text style={{ color: colors.text2, fontWeight: '600', fontSize: 15 }}>{t('cancelBtn')}</Text>
+              <Text style={{ color: colors.text2, fontFamily: fonts.bodyMedium, fontSize: 15 }}>{t('cancelBtn')}</Text>
             </TouchableOpacity>
           </Pressable>
         </Pressable>
@@ -305,42 +379,50 @@ export default function GoalsScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
-  headerTitle: { fontSize: 20, fontWeight: '700' },
-  addBtn: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
-  scroll: { padding: 16, paddingBottom: 32 },
-  summaryCard: { padding: 20, marginBottom: 16 },
-  summaryLabel: { fontSize: 11, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 6 },
-  summaryValue: { fontSize: 22, fontWeight: '700', marginBottom: 4 },
-  summarySub: { fontSize: 11 },
-  divider: { width: 1, marginHorizontal: 20, alignSelf: 'stretch' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderBottomWidth: 1 },
+  headerTitle: { ...type.h2Serif, fontSize: 26 },
+  addBtn: { width: 36, height: 36, borderRadius: radius.sm + 2, justifyContent: 'center', alignItems: 'center' },
+  scroll: { padding: spacing.lg, paddingBottom: spacing['3xl'] },
+  summaryCard: { padding: spacing.xl, marginBottom: spacing.lg },
+  summaryLabel: { ...type.label, marginBottom: spacing.xs + 2 },
+  summaryValue: { fontFamily: fonts.monoMedium, fontSize: 22, letterSpacing: -0.4, marginBottom: spacing.xs },
+  summarySub: { fontFamily: fonts.body, fontSize: 11 },
+  divider: { width: 1, marginHorizontal: spacing.xl, alignSelf: 'stretch' },
   summaryBar: { height: 6, borderRadius: 3, overflow: 'hidden' },
   summaryBarFill: { height: '100%', borderRadius: 3 },
   empty: { alignItems: 'center', marginTop: 80 },
-  emptyText: { fontSize: 14, textAlign: 'center' },
-  goalCard: { padding: 16, marginBottom: 10 },
-  goalTop: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 12 },
-  goalName: { fontSize: 16, fontWeight: '600', flex: 1 },
-  badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12, marginLeft: 8 },
-  badgeText: { fontSize: 11, fontWeight: '600' },
-  goalAmts: { fontSize: 13 },
-  goalPct: { fontSize: 13, fontWeight: '700' },
-  progressTrack: { height: 6, borderRadius: 3, overflow: 'hidden', marginBottom: 8 },
+  emptyText: { ...type.body, fontSize: 14, textAlign: 'center' },
+  goalCard: { padding: spacing.lg, marginBottom: spacing.sm + 2 },
+  goalTop: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: spacing.md },
+  goalName: { fontFamily: fonts.bodySemibold, fontSize: 16, letterSpacing: -0.2, flex: 1 },
+  badge: { paddingHorizontal: spacing.sm, paddingVertical: 3, borderRadius: radius.md, marginLeft: spacing.sm },
+  badgeText: { ...type.label, fontSize: 10 },
+  goalAmts: { fontFamily: fonts.mono, fontSize: 13 },
+  goalPct: { fontFamily: fonts.monoMedium, fontSize: 13 },
+  progressTrack: { height: 6, borderRadius: 3, overflow: 'hidden', marginBottom: spacing.sm },
   progressFill: { height: '100%', borderRadius: 3 },
-  remaining: { fontSize: 12, marginBottom: 12 },
-  goalActions: { flexDirection: 'row', gap: 16 },
-  modal: { padding: 24, paddingBottom: 48 },
-  dragHandle: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: 24 },
-  closeBtn: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 },
-  modalTitle: { fontSize: 20, fontWeight: '700' },
-  fieldLabel: { fontSize: 12, fontWeight: '600', letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 8 },
-  emojiGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
-  emojiBtn: { width: 48, height: 48, borderRadius: 12, justifyContent: 'center', alignItems: 'center', backgroundColor: '#00000008' },
-  deleteSheet: { borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 40 },
-  deleteIconWrap: { width: 60, height: 60, borderRadius: 18, justifyContent: 'center', alignItems: 'center', alignSelf: 'center', marginBottom: 16 },
-  deleteTitle: { fontSize: 18, fontWeight: '700', textAlign: 'center', marginBottom: 8 },
-  deleteSub: { fontSize: 14, textAlign: 'center', lineHeight: 22, marginBottom: 28 },
-  deleteConfirmBtn: { paddingVertical: 15, borderRadius: 14, alignItems: 'center', marginBottom: 10 },
-  deleteCancelBtn: { paddingVertical: 15, borderRadius: 14, alignItems: 'center', borderWidth: 1 },
+  remaining: { fontFamily: fonts.body, fontSize: 12 },
+  detailContainer: { borderRadius: radius.lg + 2, borderWidth: 1, overflow: 'hidden' },
+  detailHeader: { flexDirection: 'row', alignItems: 'center', padding: spacing.lg, borderBottomWidth: 1 },
+  detailName: { ...type.h2Serif, fontSize: 20 },
+  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', borderWidth: 1, margin: spacing.lg, borderRadius: radius.sm + 2, overflow: 'hidden' },
+  statCell: { width: '50%', padding: spacing.md },
+  statLabel: { ...type.label, fontSize: 9, marginBottom: spacing.xs },
+  statValue: { fontFamily: fonts.monoMedium, fontSize: 14 },
+  detailBtns: { flexDirection: 'row', gap: spacing.sm + 2, paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
+  detailBtn: { flex: 1, height: 44, borderRadius: radius.sm + 2, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
+  modal: { padding: spacing['2xl'], paddingBottom: spacing['4xl'] + 8 },
+  dragHandle: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: spacing['2xl'] },
+  closeBtn: { width: 32, height: 32, borderRadius: radius.lg, justifyContent: 'center', alignItems: 'center' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing['2xl'] + 4 },
+  modalTitle: { ...type.h2Serif, fontSize: 22 },
+  fieldLabel: { ...type.label, marginBottom: spacing.sm },
+  emojiGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.xl },
+  emojiBtn: { width: 48, height: 48, borderRadius: radius.md, justifyContent: 'center', alignItems: 'center', backgroundColor: '#00000008' },
+  deleteSheet: { borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: spacing['2xl'], paddingBottom: spacing['4xl'] },
+  deleteIconWrap: { width: 60, height: 60, borderRadius: radius.lg + 2, justifyContent: 'center', alignItems: 'center', alignSelf: 'center', marginBottom: spacing.lg },
+  deleteTitle: { ...type.h2Serif, fontSize: 20, textAlign: 'center', marginBottom: spacing.sm },
+  deleteSub: { ...type.body, fontSize: 14, textAlign: 'center', lineHeight: 22, marginBottom: spacing['2xl'] + 4 },
+  deleteConfirmBtn: { paddingVertical: 15, borderRadius: radius.md + 2, alignItems: 'center', marginBottom: spacing.sm + 2 },
+  deleteCancelBtn: { paddingVertical: 15, borderRadius: radius.md + 2, alignItems: 'center', borderWidth: 1 },
 });

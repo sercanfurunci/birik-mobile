@@ -22,6 +22,7 @@ import Button from '../../components/Button';
 import Input from '../../components/Input';
 import Dropdown from '../../components/Dropdown';
 import DatePickerField from '../../components/DatePickerField';
+import { spacing, radius, type, fonts } from '../../constants/tokens';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -207,7 +208,7 @@ function SubCard({ sub, userCurrency, colors, t, formatDate, onPress }) {
             )}
             {sub.auto_charge && (
               <View style={[styles.autoBadge, { backgroundColor: colors.brandDim }]}>
-                <Text style={{ color: colors.brand, fontSize: 9, fontWeight: '700' }}>{t('subAutoChargeBadge')}</Text>
+                <Text style={{ color: colors.brand, ...type.label, fontSize: 9, letterSpacing: 1.2 }}>{t('subAutoChargeBadge')}</Text>
               </View>
             )}
           </View>
@@ -319,7 +320,7 @@ function SubDetailModal({ sub, userCurrency, colors, t, formatDate, onClose, onE
           {addingExpense ? (
             <ActivityIndicator color="#fff" size="small" />
           ) : (
-            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>
+            <Text style={{ color: '#fff', fontFamily: fonts.bodyBold, fontSize: 14, letterSpacing: -0.2 }}>
               {expenseAdded ? `✓ ${t('subExpenseAdded')}` : t('subAddAsExpense')}
               {needsConv && rate && !expenseAdded && ` (${userCurrObj.symbol}${fmt(parseFloat(sub.amount) * rate)})`}
             </Text>
@@ -328,10 +329,10 @@ function SubDetailModal({ sub, userCurrency, colors, t, formatDate, onClose, onE
 
         <View style={styles.detailBtns}>
           <TouchableOpacity onPress={onEdit} style={[styles.detailBtn, { backgroundColor: colors.surface2, borderColor: colors.border }]}>
-            <Text style={{ color: colors.text1, fontWeight: '600', fontSize: 14 }}>{t('editBtn')}</Text>
+            <Text style={{ color: colors.text1, fontFamily: fonts.bodySemibold, fontSize: 14 }}>{t('editBtn')}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={onDelete} style={[styles.detailBtn, { backgroundColor: `${colors.red}15`, borderColor: `${colors.red}40` }]}>
-            <Text style={{ color: colors.red, fontWeight: '600', fontSize: 14 }}>{t('deleteBtn')}</Text>
+            <Text style={{ color: colors.red, fontFamily: fonts.bodySemibold, fontSize: 14 }}>{t('deleteBtn')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -567,7 +568,7 @@ export default function SubscriptionsScreen() {
                 borderColor: filterCat === 'all' ? colors.brand : colors.border,
               }]}
             >
-              <Text style={{ color: filterCat === 'all' ? '#fff' : colors.text2, fontSize: 12, fontWeight: '600' }}>
+              <Text style={{ color: filterCat === 'all' ? '#fff' : colors.text2, fontFamily: fonts.bodySemibold, fontSize: 12 }}>
                 {t('subAllCategories')}
               </Text>
             </TouchableOpacity>
@@ -580,7 +581,7 @@ export default function SubscriptionsScreen() {
                   borderColor: filterCat === c ? colors.brand : colors.border,
                 }]}
               >
-                <Text style={{ color: filterCat === c ? '#fff' : colors.text2, fontSize: 12, fontWeight: '600' }}>
+                <Text style={{ color: filterCat === c ? '#fff' : colors.text2, fontFamily: fonts.bodySemibold, fontSize: 12 }}>
                   {CATEGORY_EMOJI[c]} {t(`subCat_${c}`)}
                 </Text>
               </TouchableOpacity>
@@ -593,7 +594,7 @@ export default function SubscriptionsScreen() {
           <ActivityIndicator color={colors.brand} style={{ marginTop: 40 }} />
         ) : subs.length === 0 ? (
           <View style={styles.empty}>
-            <Text style={{ fontSize: 40, marginBottom: 16 }}>🔄</Text>
+            <Ionicons name="repeat-outline" size={44} color={colors.text3} style={{ marginBottom: spacing.lg }} />
             <Text style={[styles.emptyText, { color: colors.text3 }]}>{t('subEmpty')}</Text>
           </View>
         ) : (
@@ -630,8 +631,8 @@ export default function SubscriptionsScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setDetailSub(null)}
       >
-        <View style={{ flex: 1, backgroundColor: colors.bg, justifyContent: 'flex-end' }}>
-          <ScrollView>
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+          <ScrollView contentContainerStyle={{ padding: spacing.lg }}>
             {detailSub && (
               <SubDetailModal
                 sub={detailSub}
@@ -646,7 +647,7 @@ export default function SubscriptionsScreen() {
               />
             )}
           </ScrollView>
-        </View>
+        </SafeAreaView>
       </Modal>
 
       {/* Add/Edit Form Modal */}
@@ -764,15 +765,15 @@ export default function SubscriptionsScreen() {
             <Text style={[styles.deleteSub, { color: colors.text3 }]} numberOfLines={2}>
               {deleteTarget?.name}
               {'\n'}
-              <Text style={{ fontWeight: '600', color: colors.text2 }}>
+              <Text style={{ fontFamily: fonts.monoMedium, color: colors.text2 }}>
                 {(CURRENCIES.find(c => c.code === deleteTarget?.currency)?.symbol || userSymbol)}{fmt(deleteTarget?.amount)} · {t(`subCycle_${deleteTarget?.billing_cycle || 'monthly'}`)}
               </Text>
             </Text>
             <TouchableOpacity style={[styles.deleteConfirmBtn, { backgroundColor: colors.red }]} onPress={confirmDelete}>
-              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>{t('deleteBtn')}</Text>
+              <Text style={{ color: '#fff', fontFamily: fonts.bodyBold, fontSize: 15 }}>{t('deleteBtn')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.deleteCancelBtn, { borderColor: colors.border }]} onPress={() => setDeleteTarget(null)}>
-              <Text style={{ color: colors.text2, fontWeight: '600', fontSize: 15 }}>{t('cancelBtn')}</Text>
+              <Text style={{ color: colors.text2, fontFamily: fonts.bodySemibold, fontSize: 15 }}>{t('cancelBtn')}</Text>
             </TouchableOpacity>
           </Pressable>
         </Pressable>
@@ -782,61 +783,61 @@ export default function SubscriptionsScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
-  headerTitle: { fontSize: 20, fontWeight: '700' },
-  addBtn: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
-  scroll: { padding: 16, paddingBottom: 32 },
-  summaryCard: { padding: 20, marginBottom: 16 },
-  summaryLabel: { fontSize: 11, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 4 },
-  summaryValue: { fontSize: 32, fontWeight: '800', letterSpacing: -1, marginBottom: 4 },
-  summarySub: { fontSize: 13 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderBottomWidth: 1 },
+  headerTitle: { ...type.h2Serif, fontSize: 26 },
+  addBtn: { width: 36, height: 36, borderRadius: radius.sm + 2, justifyContent: 'center', alignItems: 'center' },
+  scroll: { padding: spacing.lg, paddingBottom: spacing['3xl'] },
+  summaryCard: { padding: spacing.xl, marginBottom: spacing.lg },
+  summaryLabel: { ...type.label, marginBottom: spacing.xs },
+  summaryValue: { fontFamily: fonts.monoMedium, fontSize: 32, letterSpacing: -1, marginBottom: spacing.xs },
+  summarySub: { fontFamily: fonts.body, fontSize: 13 },
   empty: { alignItems: 'center', marginTop: 80 },
-  emptyText: { fontSize: 14, textAlign: 'center', lineHeight: 22 },
-  groupHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4, paddingTop: 4, paddingBottom: 8 },
-  groupHeaderText: { fontSize: 12, fontWeight: '700', letterSpacing: 0.4, textTransform: 'uppercase' },
-  groupHeaderCount: { fontSize: 12, fontWeight: '600' },
+  emptyText: { ...type.body, fontSize: 14, textAlign: 'center', lineHeight: 22 },
+  groupHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xs, paddingTop: spacing.xs, paddingBottom: spacing.sm },
+  groupHeaderText: { ...type.label, fontSize: 11 },
+  groupHeaderCount: { fontFamily: fonts.mono, fontSize: 12 },
   // SubCard
-  subCard: { padding: 14, marginBottom: 10 },
+  subCard: { padding: spacing.md + 2, marginBottom: spacing.sm + 2 },
   subTop: { flexDirection: 'row', alignItems: 'center' },
-  subName: { fontSize: 15, fontWeight: '600', marginBottom: 3 },
-  subMeta: { fontSize: 12 },
-  subAmount: { fontSize: 16, fontWeight: '700', marginBottom: 2 },
-  subConverted: { fontSize: 12, marginBottom: 2 },
-  autoBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 },
-  billingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, paddingTop: 10, borderTopWidth: 1 },
-  billingLabel: { fontSize: 12 },
-  billingDate: { fontSize: 12, fontWeight: '600' },
+  subName: { fontFamily: fonts.bodySemibold, fontSize: 15, letterSpacing: -0.2, marginBottom: 3 },
+  subMeta: { ...type.small, fontSize: 12 },
+  subAmount: { fontFamily: fonts.monoMedium, fontSize: 16, marginBottom: 2 },
+  subConverted: { fontFamily: fonts.mono, fontSize: 12, marginBottom: 2 },
+  autoBadge: { paddingHorizontal: spacing.xs + 2, paddingVertical: 2, borderRadius: radius.sm },
+  billingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.sm + 2, paddingTop: spacing.sm + 2, borderTopWidth: 1 },
+  billingLabel: { ...type.small, fontSize: 12 },
+  billingDate: { fontFamily: fonts.monoMedium, fontSize: 12 },
   // ServiceIcon
   iconCircle: { borderRadius: 100, justifyContent: 'center', alignItems: 'center' },
   // Detail modal
-  detailContainer: { margin: 16, borderRadius: 18, borderWidth: 1, overflow: 'hidden' },
-  detailHeader: { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1 },
-  detailName: { fontSize: 16, fontWeight: '700', marginBottom: 4 },
-  detailMeta: { fontSize: 13 },
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', borderWidth: 1, margin: 16, borderRadius: 10, overflow: 'hidden' },
-  statCell: { width: '50%', padding: 12 },
-  statLabel: { fontSize: 10, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 4 },
-  statValue: { fontSize: 14, fontWeight: '700' },
-  detailActions: { paddingHorizontal: 16, paddingBottom: 16, gap: 10 },
-  addExpenseBtn: { height: 48, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  detailBtns: { flexDirection: 'row', gap: 10 },
-  detailBtn: { flex: 1, height: 44, borderRadius: 10, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
-  notes: { fontSize: 13, paddingHorizontal: 16, paddingBottom: 16, paddingTop: 12, borderTopWidth: 1 },
+  detailContainer: { borderRadius: radius.lg + 2, borderWidth: 1, overflow: 'hidden' },
+  detailHeader: { flexDirection: 'row', alignItems: 'center', padding: spacing.lg, borderBottomWidth: 1 },
+  detailName: { ...type.h2Serif, fontSize: 18, marginBottom: spacing.xs },
+  detailMeta: { ...type.body, fontSize: 13 },
+  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', borderWidth: 1, margin: spacing.lg, borderRadius: radius.sm + 2, overflow: 'hidden' },
+  statCell: { width: '50%', padding: spacing.md },
+  statLabel: { ...type.label, fontSize: 9, marginBottom: spacing.xs },
+  statValue: { fontFamily: fonts.monoMedium, fontSize: 14 },
+  detailActions: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg, gap: spacing.sm + 2 },
+  addExpenseBtn: { height: 48, borderRadius: radius.md, justifyContent: 'center', alignItems: 'center' },
+  detailBtns: { flexDirection: 'row', gap: spacing.sm + 2 },
+  detailBtn: { flex: 1, height: 44, borderRadius: radius.sm + 2, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
+  notes: { ...type.body, fontSize: 13, paddingHorizontal: spacing.lg, paddingBottom: spacing.lg, paddingTop: spacing.md, borderTopWidth: 1 },
   // Form
-  modal: { padding: 24, paddingBottom: 48 },
-  dragHandle: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: 24 },
-  closeBtn: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 },
-  modalTitle: { fontSize: 20, fontWeight: '700' },
-  fieldLabel: { fontSize: 12, fontWeight: '600', letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 8 },
-  chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1, alignItems: 'center' },
-  autoChargeRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderRadius: 12, borderWidth: 1, marginBottom: 16 },
-  autoChargeLabel: { fontSize: 14, fontWeight: '600', marginBottom: 2 },
-  autoChargeDesc: { fontSize: 12, lineHeight: 16 },
-  deleteSheet: { borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 40 },
-  deleteIconWrap: { width: 60, height: 60, borderRadius: 18, justifyContent: 'center', alignItems: 'center', alignSelf: 'center', marginBottom: 16 },
-  deleteTitle: { fontSize: 18, fontWeight: '700', textAlign: 'center', marginBottom: 8 },
-  deleteSub: { fontSize: 14, textAlign: 'center', lineHeight: 22, marginBottom: 28 },
-  deleteConfirmBtn: { paddingVertical: 15, borderRadius: 14, alignItems: 'center', marginBottom: 10 },
-  deleteCancelBtn: { paddingVertical: 15, borderRadius: 14, alignItems: 'center', borderWidth: 1 },
+  modal: { padding: spacing['2xl'], paddingBottom: spacing['4xl'] + 8 },
+  dragHandle: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: spacing['2xl'] },
+  closeBtn: { width: 32, height: 32, borderRadius: radius.lg, justifyContent: 'center', alignItems: 'center' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing['2xl'] + 4 },
+  modalTitle: { ...type.h2Serif, fontSize: 22 },
+  fieldLabel: { ...type.label, marginBottom: spacing.sm },
+  chip: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: radius.pill, borderWidth: 1, alignItems: 'center' },
+  autoChargeRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.lg, borderRadius: radius.md, borderWidth: 1, marginBottom: spacing.lg },
+  autoChargeLabel: { fontFamily: fonts.bodySemibold, fontSize: 14, marginBottom: 2 },
+  autoChargeDesc: { ...type.small, fontSize: 12, lineHeight: 16 },
+  deleteSheet: { borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: spacing['2xl'], paddingBottom: spacing['4xl'] },
+  deleteIconWrap: { width: 60, height: 60, borderRadius: radius.lg + 2, justifyContent: 'center', alignItems: 'center', alignSelf: 'center', marginBottom: spacing.lg },
+  deleteTitle: { ...type.h2Serif, fontSize: 20, textAlign: 'center', marginBottom: spacing.sm },
+  deleteSub: { ...type.body, fontSize: 14, textAlign: 'center', lineHeight: 22, marginBottom: spacing['2xl'] + 4 },
+  deleteConfirmBtn: { paddingVertical: 15, borderRadius: radius.md + 2, alignItems: 'center', marginBottom: spacing.sm + 2 },
+  deleteCancelBtn: { paddingVertical: 15, borderRadius: radius.md + 2, alignItems: 'center', borderWidth: 1 },
 });

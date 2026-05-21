@@ -16,6 +16,7 @@ import Card from '../../components/Card';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
 import Dropdown from '../../components/Dropdown';
+import { spacing, radius, type, fonts } from '../../constants/tokens';
 
 export default function BudgetsScreen() {
   const { colors, isDark } = useTheme();
@@ -29,6 +30,7 @@ export default function BudgetsScreen() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingBudget, setEditingBudget] = useState(null);
+  const [detailBudget, setDetailBudget] = useState(null);
   const [selCategory, setSelCategory] = useState('food');
   const [limitAmount, setLimitAmount] = useState('');
   const [notes, setNotes] = useState('');
@@ -73,6 +75,7 @@ export default function BudgetsScreen() {
   };
 
   const openEdit = (b) => {
+    setDetailBudget(null);
     setEditingBudget(b);
     setSelCategory(b.category);
     setLimitAmount(String(b.amount));
@@ -113,6 +116,7 @@ export default function BudgetsScreen() {
   };
 
   const handleDelete = (b) => {
+    setDetailBudget(null);
     setDeleteTarget(b);
   };
 
@@ -141,7 +145,7 @@ export default function BudgetsScreen() {
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Text style={[styles.headerTitle, { color: colors.text1 }]}>{t('budgets')}</Text>
         <TouchableOpacity onPress={openAdd} style={[styles.addBtn, { backgroundColor: colors.brand }]}>
-          <Text style={{ color: '#fff', fontSize: 20, lineHeight: 24 }}>+</Text>
+          <Ionicons name="add" size={22} color="#fff" />
         </TouchableOpacity>
       </View>
 
@@ -175,10 +179,10 @@ export default function BudgetsScreen() {
         {/* Budget list */}
         {budgets.length === 0 ? (
           <View style={styles.empty}>
-            <Text style={{ fontSize: 40, marginBottom: 16 }}>💰</Text>
+            <Ionicons name="wallet-outline" size={44} color={colors.text3} style={{ marginBottom: spacing.lg }} />
             <Text style={[styles.emptyText, { color: colors.text3 }]}>{t('budgetEmpty')}</Text>
             <TouchableOpacity onPress={openAdd} style={[styles.emptyBtn, { backgroundColor: colors.brand }]}>
-              <Text style={{ color: '#fff', fontWeight: '600' }}>{t('budgetAdd')}</Text>
+              <Text style={{ color: '#fff', fontFamily: fonts.bodySemibold }}>{t('budgetAdd')}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -192,48 +196,113 @@ export default function BudgetsScreen() {
             const remaining = limit - spent;
 
             return (
-              <Card key={b.id} style={[styles.budgetCard, { borderColor: colors.border }]}>
-                <View style={styles.budgetHeader}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                    <View style={[styles.catDot, { backgroundColor: getCatColor(b.category, 'expense') }]} />
-                    <Text style={[styles.budgetCat, { color: colors.text1 }]}>{t(b.category)}</Text>
-                    <View style={[styles.badge, {
-                      backgroundColor: `${barColor}18`,
-                    }]}>
+              <TouchableOpacity key={b.id} activeOpacity={0.8} onPress={() => setDetailBudget(b)}>
+                <Card style={[styles.budgetCard, { borderColor: colors.border }]}>
+                  <View style={styles.budgetHeader}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                      <View style={[styles.catDot, { backgroundColor: getCatColor(b.category, 'expense') }]} />
+                      <Text style={[styles.budgetCat, { color: colors.text1 }]}>{t(b.category)}</Text>
+                    </View>
+                    <View style={[styles.badge, { backgroundColor: `${barColor}18` }]}>
                       <Text style={[styles.badgeText, { color: barColor }]}>
                         {isOver ? t('budgetExceeded') : isWarning ? t('budgetWarning') : t('budgetOnTrack')}
                       </Text>
                     </View>
                   </View>
-                  <View style={{ flexDirection: 'row', gap: 12 }}>
-                    <TouchableOpacity onPress={() => openEdit(b)}>
-                      <Text style={{ color: colors.brand, fontSize: 13, fontWeight: '600' }}>{t('editBtn')}</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleDelete(b)}>
-                      <Text style={{ color: colors.red, fontSize: 13, fontWeight: '600' }}>{t('deleteBtn')}</Text>
-                    </TouchableOpacity>
+
+                  <View style={styles.budgetAmounts}>
+                    <Text style={[styles.spentLabel, { color: colors.text3 }]}>
+                      {symbol}{fmt(spent)} / {symbol}{fmt(limit)}
+                    </Text>
+                    <Text style={[styles.remainingLabel, { color: isOver ? colors.red : colors.text3 }]}>
+                      {isOver ? `${t('budgetOverBy')} ${symbol}${fmt(Math.abs(remaining))}` : `${symbol}${fmt(remaining)} ${t('budgetRemaining')}`}
+                    </Text>
                   </View>
-                </View>
 
-                <View style={styles.budgetAmounts}>
-                  <Text style={[styles.spentLabel, { color: colors.text3 }]}>
-                    {symbol}{fmt(spent)} / {symbol}{fmt(limit)}
-                  </Text>
-                  <Text style={[styles.remainingLabel, { color: isOver ? colors.red : colors.text3 }]}>
-                    {isOver ? `${t('budgetOverBy')} ${symbol}${fmt(Math.abs(remaining))}` : `${symbol}${fmt(remaining)} ${t('budgetRemaining')}`}
-                  </Text>
-                </View>
-
-                <View style={[styles.progressTrack, { backgroundColor: colors.surface2 }]}>
-                  <View style={[styles.progressFill, { width: `${pct}%`, backgroundColor: barColor }]} />
-                </View>
-                <Text style={[styles.pctLabel, { color: colors.text3 }]}>{pct.toFixed(0)}%</Text>
-                {b.notes ? <Text style={[styles.noteText, { color: colors.text3 }]} numberOfLines={2}>{b.notes}</Text> : null}
-              </Card>
+                  <View style={[styles.progressTrack, { backgroundColor: colors.surface2 }]}>
+                    <View style={[styles.progressFill, { width: `${pct}%`, backgroundColor: barColor }]} />
+                  </View>
+                  <Text style={[styles.pctLabel, { color: colors.text3 }]}>{pct.toFixed(0)}%</Text>
+                  {b.notes ? <Text style={[styles.noteText, { color: colors.text3 }]} numberOfLines={2}>{b.notes}</Text> : null}
+                </Card>
+              </TouchableOpacity>
             );
           })
         )}
       </ScrollView>
+
+      <Modal visible={!!detailBudget} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setDetailBudget(null)}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+          {detailBudget && (() => {
+            const spent = getSpent(detailBudget.category);
+            const limit = parseFloat(detailBudget.amount);
+            const pct = limit > 0 ? Math.min(100, (spent / limit) * 100) : 0;
+            const isOver = spent > limit;
+            const isWarning = pct > 80 && !isOver;
+            const barColor = isOver ? colors.red : isWarning ? colors.gold : colors.green;
+            const remaining = limit - spent;
+            const statusLabel = isOver ? t('budgetExceeded') : isWarning ? t('budgetWarning') : t('budgetOnTrack');
+            const stats = [
+              [t('budgetMonthlyLimit'), `${symbol}${fmt(limit)}`],
+              [t('budgetSpent'), `${symbol}${fmt(spent)}`],
+              [isOver ? t('budgetOverBy') : t('budgetRemaining'), `${symbol}${fmt(Math.abs(remaining))}`],
+              [t('budgetUsedPct'), `${pct.toFixed(0)}%`],
+            ];
+            return (
+              <ScrollView contentContainerStyle={{ padding: spacing.lg }}>
+                <View style={[styles.detailContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <View style={[styles.detailHeader, { borderBottomColor: colors.border }]}>
+                    <View style={[styles.catDotLg, { backgroundColor: getCatColor(detailBudget.category, 'expense') }]} />
+                    <View style={{ flex: 1, marginLeft: 12, minWidth: 0 }}>
+                      <Text style={[styles.detailName, { color: colors.text1 }]} numberOfLines={1}>{t(detailBudget.category)}</Text>
+                      <View style={[styles.badge, { backgroundColor: `${barColor}18`, alignSelf: 'flex-start', marginTop: 4 }]}>
+                        <Text style={[styles.badgeText, { color: barColor }]}>{statusLabel}</Text>
+                      </View>
+                    </View>
+                    <TouchableOpacity onPress={() => setDetailBudget(null)} style={{ padding: 4 }}>
+                      <Ionicons name="close" size={22} color={colors.text3} />
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.lg }}>
+                    <View style={[styles.progressTrack, { backgroundColor: colors.surface2, height: 8 }]}>
+                      <View style={[styles.progressFill, { width: `${pct}%`, backgroundColor: barColor }]} />
+                    </View>
+                  </View>
+
+                  <View style={[styles.statsGrid, { borderColor: colors.border }]}>
+                    {stats.map(([lbl, value], i) => (
+                      <View key={lbl} style={[styles.statCell, {
+                        backgroundColor: colors.surface2,
+                        borderRightColor: colors.border,
+                        borderBottomColor: colors.border,
+                        borderRightWidth: i % 2 === 0 ? 1 : 0,
+                        borderBottomWidth: i < 2 ? 1 : 0,
+                      }]}>
+                        <Text style={[styles.statLabel, { color: colors.text3 }]}>{lbl}</Text>
+                        <Text style={[styles.statValue, { color: colors.text1 }]}>{value}</Text>
+                      </View>
+                    ))}
+                  </View>
+
+                  {detailBudget.notes ? (
+                    <Text style={[styles.detailNotes, { color: colors.text3, borderTopColor: colors.border }]}>{detailBudget.notes}</Text>
+                  ) : null}
+
+                  <View style={styles.detailBtns}>
+                    <TouchableOpacity onPress={() => openEdit(detailBudget)} style={[styles.detailBtn, { backgroundColor: colors.surface2, borderColor: colors.border }]}>
+                      <Text style={{ color: colors.text1, fontFamily: fonts.bodySemibold, fontSize: 14 }}>{t('editBtn')}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => handleDelete(detailBudget)} style={[styles.detailBtn, { backgroundColor: `${colors.red}15`, borderColor: `${colors.red}40` }]}>
+                      <Text style={{ color: colors.red, fontFamily: fonts.bodySemibold, fontSize: 14 }}>{t('deleteBtn')}</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </ScrollView>
+            );
+          })()}
+        </SafeAreaView>
+      </Modal>
 
       <Modal visible={showModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowModal(false)}>
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -278,15 +347,15 @@ export default function BudgetsScreen() {
             <Text style={[styles.deleteSub, { color: colors.text3 }]} numberOfLines={2}>
               {deleteTarget ? t(deleteTarget.category) : ''}
               {'\n'}
-              <Text style={{ fontWeight: '600', color: colors.text2 }}>
+              <Text style={{ fontFamily: fonts.monoMedium, color: colors.text2 }}>
                 {symbol}{fmt(deleteTarget?.amount)}
               </Text>
             </Text>
             <TouchableOpacity style={[styles.deleteConfirmBtn, { backgroundColor: colors.red }]} onPress={confirmDelete}>
-              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>{t('deleteBtn')}</Text>
+              <Text style={{ color: '#fff', fontFamily: fonts.bodySemibold, fontSize: 15 }}>{t('deleteBtn')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.deleteCancelBtn, { borderColor: colors.border }]} onPress={() => setDeleteTarget(null)}>
-              <Text style={{ color: colors.text2, fontWeight: '600', fontSize: 15 }}>{t('cancelBtn')}</Text>
+              <Text style={{ color: colors.text2, fontFamily: fonts.bodyMedium, fontSize: 15 }}>{t('cancelBtn')}</Text>
             </TouchableOpacity>
           </Pressable>
         </Pressable>
@@ -296,42 +365,53 @@ export default function BudgetsScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
-  headerTitle: { fontSize: 20, fontWeight: '700' },
-  addBtn: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
-  scroll: { padding: 16, paddingBottom: 32 },
-  summaryRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
-  summaryCard: { flex: 1, padding: 16 },
-  summaryLabel: { fontSize: 11, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 6 },
-  summaryValue: { fontSize: 22, fontWeight: '700', marginBottom: 4 },
-  summarySub: { fontSize: 11 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderBottomWidth: 1 },
+  headerTitle: { ...type.h2Serif, fontSize: 26 },
+  addBtn: { width: 36, height: 36, borderRadius: radius.sm + 2, justifyContent: 'center', alignItems: 'center' },
+  scroll: { padding: spacing.lg, paddingBottom: spacing['3xl'] },
+  summaryRow: { flexDirection: 'row', gap: spacing.sm + 2, marginBottom: spacing.lg },
+  summaryCard: { flex: 1, padding: spacing.lg },
+  summaryLabel: { ...type.label, marginBottom: spacing.xs + 2 },
+  summaryValue: { fontFamily: fonts.monoMedium, fontSize: 22, letterSpacing: -0.4, marginBottom: spacing.xs },
+  summarySub: { fontFamily: fonts.mono, fontSize: 11 },
   empty: { alignItems: 'center', marginTop: 80 },
-  emptyText: { fontSize: 14, textAlign: 'center', marginBottom: 20, lineHeight: 22 },
-  emptyBtn: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 10 },
-  budgetCard: { padding: 16, marginBottom: 10 },
-  budgetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  emptyText: { ...type.body, fontSize: 14, textAlign: 'center', marginBottom: spacing.xl, lineHeight: 22 },
+  emptyBtn: { paddingHorizontal: spacing['2xl'], paddingVertical: spacing.md, borderRadius: radius.sm + 2 },
+  budgetCard: { padding: spacing.lg, marginBottom: spacing.sm + 2 },
+  budgetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
   catDot: { width: 10, height: 10, borderRadius: 5 },
-  budgetCat: { fontSize: 15, fontWeight: '600' },
-  badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 },
-  badgeText: { fontSize: 11, fontWeight: '600' },
-  budgetAmounts: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  spentLabel: { fontSize: 13 },
-  remainingLabel: { fontSize: 13, fontWeight: '600' },
-  progressTrack: { height: 6, borderRadius: 3, overflow: 'hidden', marginBottom: 4 },
+  budgetCat: { fontFamily: fonts.bodySemibold, fontSize: 15, letterSpacing: -0.2 },
+  badge: { paddingHorizontal: spacing.sm, paddingVertical: 3, borderRadius: radius.md },
+  badgeText: { ...type.label, fontSize: 10 },
+  budgetAmounts: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.sm },
+  spentLabel: { fontFamily: fonts.mono, fontSize: 13 },
+  remainingLabel: { fontFamily: fonts.monoMedium, fontSize: 13 },
+  progressTrack: { height: 6, borderRadius: 3, overflow: 'hidden', marginBottom: spacing.xs },
   progressFill: { height: '100%', borderRadius: 3 },
-  pctLabel: { fontSize: 11, textAlign: 'right' },
-  noteText: { fontSize: 12, marginTop: 8 },
-  modal: { padding: 24, paddingBottom: 48 },
-  dragHandle: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: 24 },
-  closeBtn: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 },
-  modalTitle: { fontSize: 20, fontWeight: '700' },
-  fieldLabel: { fontSize: 12, fontWeight: '600', letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 8 },
-  chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1 },
-  deleteSheet: { borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 40 },
-  deleteIconWrap: { width: 60, height: 60, borderRadius: 18, justifyContent: 'center', alignItems: 'center', alignSelf: 'center', marginBottom: 16 },
-  deleteTitle: { fontSize: 18, fontWeight: '700', textAlign: 'center', marginBottom: 8 },
-  deleteSub: { fontSize: 14, textAlign: 'center', lineHeight: 22, marginBottom: 28 },
-  deleteConfirmBtn: { paddingVertical: 15, borderRadius: 14, alignItems: 'center', marginBottom: 10 },
-  deleteCancelBtn: { paddingVertical: 15, borderRadius: 14, alignItems: 'center', borderWidth: 1 },
+  pctLabel: { fontFamily: fonts.mono, fontSize: 11, textAlign: 'right' },
+  noteText: { ...type.small, fontSize: 12, marginTop: spacing.sm },
+  detailContainer: { borderRadius: radius.lg + 2, borderWidth: 1, overflow: 'hidden' },
+  detailHeader: { flexDirection: 'row', alignItems: 'center', padding: spacing.lg, borderBottomWidth: 1 },
+  catDotLg: { width: 32, height: 32, borderRadius: 16 },
+  detailName: { ...type.h2Serif, fontSize: 20 },
+  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', borderWidth: 1, margin: spacing.lg, borderRadius: radius.sm + 2, overflow: 'hidden' },
+  statCell: { width: '50%', padding: spacing.md },
+  statLabel: { ...type.label, fontSize: 9, marginBottom: spacing.xs },
+  statValue: { fontFamily: fonts.monoMedium, fontSize: 14 },
+  detailNotes: { ...type.body, fontSize: 13, paddingHorizontal: spacing.lg, paddingBottom: spacing.md, paddingTop: spacing.md, borderTopWidth: 1 },
+  detailBtns: { flexDirection: 'row', gap: spacing.sm + 2, paddingHorizontal: spacing.lg, paddingBottom: spacing.lg, paddingTop: spacing.sm },
+  detailBtn: { flex: 1, height: 44, borderRadius: radius.sm + 2, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
+  modal: { padding: spacing['2xl'], paddingBottom: spacing['4xl'] + 8 },
+  dragHandle: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: spacing['2xl'] },
+  closeBtn: { width: 32, height: 32, borderRadius: radius.lg, justifyContent: 'center', alignItems: 'center' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing['2xl'] + 4 },
+  modalTitle: { ...type.h2Serif, fontSize: 22 },
+  fieldLabel: { ...type.label, marginBottom: spacing.sm },
+  chip: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: radius.pill, borderWidth: 1 },
+  deleteSheet: { borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: spacing['2xl'], paddingBottom: spacing['4xl'] },
+  deleteIconWrap: { width: 60, height: 60, borderRadius: radius.lg + 2, justifyContent: 'center', alignItems: 'center', alignSelf: 'center', marginBottom: spacing.lg },
+  deleteTitle: { ...type.h2Serif, fontSize: 20, textAlign: 'center', marginBottom: spacing.sm },
+  deleteSub: { ...type.body, fontSize: 14, textAlign: 'center', lineHeight: 22, marginBottom: spacing['2xl'] + 4 },
+  deleteConfirmBtn: { paddingVertical: 15, borderRadius: radius.md + 2, alignItems: 'center', marginBottom: spacing.sm + 2 },
+  deleteCancelBtn: { paddingVertical: 15, borderRadius: radius.md + 2, alignItems: 'center', borderWidth: 1 },
 });

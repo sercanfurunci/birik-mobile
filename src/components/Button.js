@@ -1,6 +1,7 @@
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../context/ThemeContext';
+import { spacing, radius, fonts } from '../constants/tokens';
 
 export default function Button({ onPress, title, loading, disabled, variant = 'primary', style }) {
   const { colors } = useTheme();
@@ -45,13 +46,14 @@ export default function Button({ onPress, title, loading, disabled, variant = 'p
 const styles = StyleSheet.create({
   btn: {
     height: 48,
-    borderRadius: 12,
+    borderRadius: radius.md,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: spacing.xl,
   },
   text: {
+    fontFamily: fonts.bodySemibold,
     fontSize: 15,
-    fontWeight: '600',
+    letterSpacing: -0.2,
   },
 });

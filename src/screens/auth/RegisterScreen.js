@@ -3,9 +3,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import { useLang } from '../../context/LangContext';
+import { Ionicons } from '@expo/vector-icons';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
 import { API } from '../../utils/api';
+import { spacing, radius, type, fonts } from '../../constants/tokens';
 
 function validatePassword(password, t) {
   if (password.length < 8) return t('passwordTooShort');
@@ -28,7 +30,7 @@ function PasswordStrength({ password, colors }) {
           <View key={i} style={{ flex: 1, height: 3, borderRadius: 2, backgroundColor: i < count ? strengthColor : colors.border }} />
         ))}
       </View>
-      <Text style={{ color: strengthColor, fontSize: 11, fontWeight: '600' }}>{strengthLabel}</Text>
+      <Text style={{ color: strengthColor, ...type.label, fontSize: 10 }}>{strengthLabel}</Text>
     </View>
   );
 }
@@ -77,18 +79,18 @@ export default function RegisterScreen({ navigation }) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.bg} />
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
-          <Text style={{ fontSize: 48, marginBottom: 20 }}>✅</Text>
-          <Text style={{ fontSize: 20, fontWeight: '700', color: colors.text1, marginBottom: 12, textAlign: 'center' }}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing['2xl'] }}>
+          <Ionicons name="checkmark-circle" size={56} color={colors.green} style={{ marginBottom: spacing.xl }} />
+          <Text style={{ ...type.h2Serif, fontSize: 24, color: colors.text1, marginBottom: spacing.md, textAlign: 'center' }}>
             {verifyMethod === 'email' ? t('checkYourEmail') : t('accountCreated')}
           </Text>
           {verifyMethod === 'email' && (
-            <Text style={{ fontSize: 14, color: colors.text2, textAlign: 'center', marginBottom: 8 }}>
+            <Text style={{ ...type.body, fontSize: 14, color: colors.text2, textAlign: 'center', marginBottom: spacing.sm }}>
               {t('verificationSent')} {email}
             </Text>
           )}
-          <TouchableOpacity onPress={() => navigation.navigate('Login')} style={{ marginTop: 24 }}>
-            <Text style={{ color: colors.brand, fontSize: 15, fontWeight: '600' }}>{t('backToSignIn')}</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Login')} style={{ marginTop: spacing['2xl'] }}>
+            <Text style={{ color: colors.brand, fontFamily: fonts.bodySemibold, fontSize: 15 }}>{t('backToSignIn')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -101,7 +103,7 @@ export default function RegisterScreen({ navigation }) {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Text style={{ color: colors.text3, fontSize: 14 }}>← {t('backToLanding')}</Text>
+            <Text style={{ color: colors.text3, fontFamily: fonts.body, fontSize: 14 }}>← {t('backToLanding')}</Text>
           </TouchableOpacity>
 
           <View style={styles.brand}>
@@ -142,15 +144,15 @@ export default function RegisterScreen({ navigation }) {
 
             {!!error && (
               <View style={[styles.errorBox, { backgroundColor: `${colors.red}18`, borderColor: `${colors.red}44` }]}>
-                <Text style={{ color: colors.red, fontSize: 13 }}>{error}</Text>
+                <Text style={{ color: colors.red, ...type.small, fontSize: 13 }}>{error}</Text>
               </View>
             )}
 
             <TouchableOpacity onPress={() => setTermsAccepted(v => !v)} style={styles.termsRow} activeOpacity={0.7}>
               <View style={[styles.checkbox, { borderColor: termsAccepted ? colors.brand : colors.border, backgroundColor: termsAccepted ? colors.brand : 'transparent' }]}>
-                {termsAccepted && <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>✓</Text>}
+                {termsAccepted && <Ionicons name="checkmark" size={14} color="#fff" />}
               </View>
-              <Text style={{ color: colors.text2, fontSize: 13, flex: 1, lineHeight: 18 }}>
+              <Text style={{ color: colors.text2, ...type.small, fontSize: 13, flex: 1, lineHeight: 18 }}>
                 {t('registerAgreePrefix')}{' '}
                 <Text style={{ color: colors.brand, textDecorationLine: 'underline' }} onPress={() => navigation.navigate('Legal', { type: 'terms' })}>{t('termsOfService')}</Text>
                 {' '}{t('registerAnd')}{' '}
@@ -163,9 +165,9 @@ export default function RegisterScreen({ navigation }) {
           </View>
 
           <View style={styles.switchRow}>
-            <Text style={{ color: colors.text2, fontSize: 14 }}>{t('alreadyHaveAccount')} </Text>
+            <Text style={{ color: colors.text2, fontFamily: fonts.body, fontSize: 14 }}>{t('alreadyHaveAccount')} </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text style={{ color: colors.brand, fontSize: 14, fontWeight: '600' }}>{t('signInLink')}</Text>
+              <Text style={{ color: colors.brand, fontFamily: fonts.bodySemibold, fontSize: 14 }}>{t('signInLink')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -176,19 +178,19 @@ export default function RegisterScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { paddingHorizontal: 20, paddingBottom: 40, paddingTop: 8 },
-  backBtn: { marginBottom: 24 },
-  brand: { alignItems: 'center', marginBottom: 32 },
-  brandIcon: { width: 96, height: 96, marginBottom: 4 },
-  brandName: { fontSize: 24, fontWeight: '700', letterSpacing: -0.5 },
-  brandSub: { fontSize: 14, marginTop: 4 },
-  card: { padding: 24, borderRadius: 18, borderWidth: 1, marginBottom: 20 },
-  cardTitle: { fontSize: 17, fontWeight: '600', marginBottom: 20 },
-  toggle: { flexDirection: 'row', borderRadius: 10, padding: 4, borderWidth: 1, marginBottom: 20, gap: 4 },
-  toggleBtn: { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
-  toggleText: { fontSize: 13, fontWeight: '600' },
-  errorBox: { padding: 12, borderRadius: 10, borderWidth: 1, marginTop: 8 },
+  container: { paddingHorizontal: spacing.xl, paddingBottom: spacing['4xl'], paddingTop: spacing.sm },
+  backBtn: { marginBottom: spacing['2xl'] },
+  brand: { alignItems: 'center', marginBottom: spacing['3xl'] },
+  brandIcon: { width: 96, height: 96, marginBottom: spacing.xs },
+  brandName: { ...type.h1Serif, fontSize: 28 },
+  brandSub: { ...type.body, fontSize: 14, marginTop: spacing.xs },
+  card: { padding: spacing['2xl'], borderRadius: radius.lg + 2, borderWidth: 1, marginBottom: spacing.xl },
+  cardTitle: { ...type.h2Serif, fontSize: 20, marginBottom: spacing.xl },
+  toggle: { flexDirection: 'row', borderRadius: radius.sm + 2, padding: spacing.xs, borderWidth: 1, marginBottom: spacing.xl, gap: spacing.xs },
+  toggleBtn: { flex: 1, paddingVertical: spacing.sm, borderRadius: radius.sm, alignItems: 'center' },
+  toggleText: { fontFamily: fonts.bodySemibold, fontSize: 13 },
+  errorBox: { padding: spacing.md, borderRadius: radius.sm + 2, borderWidth: 1, marginTop: spacing.sm },
   switchRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
-  termsRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginTop: 16 },
-  checkbox: { width: 20, height: 20, borderRadius: 5, borderWidth: 1.5, justifyContent: 'center', alignItems: 'center', marginTop: 1 },
+  termsRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm + 2, marginTop: spacing.lg },
+  checkbox: { width: 20, height: 20, borderRadius: radius.sm - 3, borderWidth: 1.5, justifyContent: 'center', alignItems: 'center', marginTop: 1 },
 });

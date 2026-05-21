@@ -9,7 +9,8 @@ export default function DatePickerField({ label, value, onChange, placeholder, o
   const { t, lang } = useLang();
   const [show, setShow] = useState(false);
 
-  const date = value ? new Date(value + 'T00:00:00') : new Date();
+  const normalizedValue = value ? String(value).split('T')[0] : '';
+  const date = normalizedValue ? new Date(normalizedValue + 'T00:00:00') : new Date();
 
   const handleChange = (event, selected) => {
     if (Platform.OS === 'android') setShow(false);
@@ -22,7 +23,7 @@ export default function DatePickerField({ label, value, onChange, placeholder, o
     }
   };
 
-  const displayText = value || placeholder || 'YYYY-MM-DD';
+  const displayText = normalizedValue || placeholder || 'YYYY-MM-DD';
 
   return (
     <View style={style}>

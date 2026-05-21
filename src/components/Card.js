@@ -1,5 +1,6 @@
 import { View, StyleSheet } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
+import { radius, shadow } from '../constants/tokens';
 
 export default function Card({ children, style }) {
   const { colors } = useTheme();
@@ -15,12 +16,8 @@ export default function Card({ children, style }) {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 14,
+    borderRadius: radius.md + 2,
     borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    ...shadow.sm,
   },
 });

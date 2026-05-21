@@ -1,7 +1,7 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import NetInfo from '@react-native-community/netinfo';
 import { API, authFetch, queuedAuthFetch } from '../utils/api';
-import { getQueue, removeFromQueue } from '../utils/offlineQueue';
+import { getQueue, removeFromQueue, findInQueue, onQueueChange, getQueueLength } from '../utils/offlineQueue';
 import { getBiometricLockEnabled } from '../utils/biometric';
 import { getToken, setToken, removeToken } from '../utils/tokenStorage';
 import { getCachedUser, setCachedUser, clearCachedUser } from '../utils/userCache';
@@ -18,7 +18,13 @@ export function AuthProvider({ children }) {
   const [syncVersion, setSyncVersion] = useState(0);
 
   useEffect(() => {
-    getQueue().then(q => setPendingCount(q.length));
+    const refresh = () => { getQueueLength().then(setPendingCount).catch(() => {}); };
+    refresh();
+    const unsub = onQueueChange(refresh);
+    return unsub;
+  }, []);
+
+  useEffect(() => {
     (async () => {
       try {
         const token = await getToken();
@@ -112,54 +118,63 @@ export function AuthProvider({ children }) {
     });
   }, []);
 
+  const syncInFlightRef = useRef(false);
   const syncOfflineQueue = useCallback(async () => {
-    const queue = await getQueue();
-    if (!queue.length) return 0;
-    let synced = 0;
-    for (const item of queue) {
-      try {
-        const res = await authFetch(item.url, {
-          method: item.method,
-          headers: item.body ? { 'Content-Type': 'application/json' } : {},
-          body: item.body,
-        });
-        if (res.ok) {
-          const isTransactionPost = item.method === 'POST' && item.url.endsWith('/transactions');
-          const isTransactionPut = item.method === 'PUT' && /\/transactions\//.test(item.url);
+    if (syncInFlightRef.current) return 0;
+    syncInFlightRef.current = true;
+    try {
+      const queue = await getQueue();
+      if (!queue.length) return 0;
+      let synced = 0;
+      for (const item of queue) {
+        const stillQueued = await findInQueue(item.tempId);
+        if (!stillQueued) continue;
+        try {
+          const res = await authFetch(item.url, {
+            method: item.method,
+            headers: item.body ? { 'Content-Type': 'application/json' } : {},
+            body: item.body,
+          });
+          if (res.ok) {
+            const isTransactionPost = item.method === 'POST' && item.url.endsWith('/transactions');
+            const isTransactionPut = item.method === 'PUT' && /\/transactions\//.test(item.url);
 
-          if (isTransactionPost) {
-            const real = await res.json();
-            if (real?.id) {
-              setTransactions(prev => {
-                const next = prev.map(tx =>
-                  tx.id === item.tempId ? { ...real, _pending: false } : tx
-                );
-                setCached(`${API}/transactions`, next).catch(() => {});
-                return next;
-              });
+            if (isTransactionPost) {
+              const real = await res.json();
+              if (real?.id) {
+                setTransactions(prev => {
+                  const next = prev.map(tx =>
+                    tx.id === item.tempId ? { ...real, _pending: false } : tx
+                  );
+                  setCached(`${API}/transactions`, next).catch(() => {});
+                  return next;
+                });
+              }
+            } else if (isTransactionPut) {
+              const real = await res.json();
+              if (real?.id) {
+                setTransactions(prev => {
+                  const next = prev.map(tx =>
+                    tx.id === real.id ? { ...real, _pending: false } : tx
+                  );
+                  setCached(`${API}/transactions`, next).catch(() => {});
+                  return next;
+                });
+              }
             }
-          } else if (isTransactionPut) {
-            const real = await res.json();
-            if (real?.id) {
-              setTransactions(prev => {
-                const next = prev.map(tx =>
-                  tx.id === real.id ? { ...real, _pending: false } : tx
-                );
-                setCached(`${API}/transactions`, next).catch(() => {});
-                return next;
-              });
-            }
+
+            await removeFromQueue(item.tempId);
+            synced++;
           }
-
-          await removeFromQueue(item.tempId);
-          synced++;
-        }
-      } catch {}
+        } catch {}
+      }
+      const remaining = await getQueue();
+      setPendingCount(remaining.length);
+      if (synced > 0) setSyncVersion(v => v + 1);
+      return synced;
+    } finally {
+      syncInFlightRef.current = false;
     }
-    const remaining = await getQueue();
-    setPendingCount(remaining.length);
-    if (synced > 0) setSyncVersion(v => v + 1);
-    return synced;
   }, []);
 
   useEffect(() => {
@@ -167,6 +182,14 @@ export function AuthProvider({ children }) {
       const connected = !!(state.isConnected && state.isInternetReachable !== false);
       if (connected) syncOfflineQueue();
     });
+    (async () => {
+      try {
+        const net = await NetInfo.fetch();
+        const online = !!(net.isConnected && net.isInternetReachable !== false);
+        const len = await getQueueLength();
+        if (online && len > 0) syncOfflineQueue();
+      } catch {}
+    })();
     return unsub;
   }, [syncOfflineQueue]);
 
@@ -184,7 +207,6 @@ export function AuthProvider({ children }) {
       setCached(`${API}/transactions`, next).catch(() => {});
       return next;
     });
-    if (res._queued) setPendingCount(c => c + 1);
     return data;
   }, []);
 
@@ -196,7 +218,6 @@ export function AuthProvider({ children }) {
       setCached(`${API}/transactions`, next).catch(() => {});
       return next;
     });
-    if (res._queued) setPendingCount(c => c + 1);
     return true;
   }, []);
 
@@ -214,7 +235,6 @@ export function AuthProvider({ children }) {
       setCached(`${API}/transactions`, next).catch(() => {});
       return next;
     });
-    if (res._queued) setPendingCount(c => c + 1);
     return data;
   }, []);
 

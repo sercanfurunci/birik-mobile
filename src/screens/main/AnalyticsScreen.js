@@ -9,6 +9,7 @@ import { useCurrency } from '../../context/CurrencyContext';
 import { useCategories } from '../../context/CategoriesContext';
 import { fmt } from '../../utils/format';
 import Card from '../../components/Card';
+import { spacing, radius, type, fonts } from '../../constants/tokens';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const BAR_H = 100;
@@ -198,12 +199,12 @@ export default function AnalyticsScreen() {
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
         <Text style={[s.pageTitle, { color: colors.text1 }]}>{t('navAnalytics')}</Text>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.xl }}>
+          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
             {DATE_RANGES.map(r => (
               <TouchableOpacity key={r} onPress={() => { setRange(r); setSelectedBar(null); }}
                 style={[s.chip, { backgroundColor: range === r ? colors.brand : colors.surface, borderColor: colors.border }]}>
-                <Text style={{ color: range === r ? '#fff' : colors.text2, fontSize: 13, fontWeight: '600' }}>{rangeLabel[r]}</Text>
+                <Text style={{ color: range === r ? '#fff' : colors.text2, fontFamily: fonts.bodyMedium, fontSize: 13 }}>{rangeLabel[r]}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -211,7 +212,7 @@ export default function AnalyticsScreen() {
 
         {!hasData ? (
           <View style={s.empty}>
-            <Text style={{ fontSize: 40, marginBottom: 16 }}>📈</Text>
+            <Ionicons name="bar-chart-outline" size={44} color={colors.text3} style={{ marginBottom: spacing.lg }} />
             <Text style={[s.emptyText, { color: colors.text3 }]}>{t('noTransactionsAnalytics')}</Text>
           </View>
         ) : (
@@ -220,7 +221,7 @@ export default function AnalyticsScreen() {
             <View style={s.metricsGrid}>
               <Card style={[s.metricCard, { borderColor: colors.border }]}>
                 <Text style={[s.metricLabel, { color: colors.text3 }]}>{t('avgExpense')}</Text>
-                <Text style={[s.metricValue, { color: colors.text1 }]} numberOfLines={1} adjustsFontSizeToFit>
+                <Text style={[s.metricValueMono, { color: colors.text1 }]} numberOfLines={1} adjustsFontSizeToFit>
                   {symbol}{fmt(avgExp)}
                 </Text>
               </Card>
@@ -237,7 +238,7 @@ export default function AnalyticsScreen() {
               )}
               <Card style={[s.metricCard, { borderColor: colors.border }]}>
                 <Text style={[s.metricLabel, { color: colors.text3 }]}>{t('transactions')}</Text>
-                <Text style={[s.metricValue, { color: colors.text1 }]} numberOfLines={1} adjustsFontSizeToFit>
+                <Text style={[s.metricValueMono, { color: colors.text1 }]} numberOfLines={1} adjustsFontSizeToFit>
                   {txCount}
                 </Text>
                 <Text style={[s.metricSub, { color: colors.text3 }]} numberOfLines={1}>
@@ -247,7 +248,7 @@ export default function AnalyticsScreen() {
               {biggest && (
                 <Card style={[s.metricCard, { borderColor: colors.border }]}>
                   <Text style={[s.metricLabel, { color: colors.text3 }]}>{t('biggestExpense')}</Text>
-                  <Text style={[s.metricValue, { color: colors.red }]} numberOfLines={1} adjustsFontSizeToFit>
+                  <Text style={[s.metricValueMono, { color: colors.red }]} numberOfLines={1} adjustsFontSizeToFit>
                     {symbol}{fmt(biggest.amount)}
                   </Text>
                   <Text style={[s.metricSub, { color: colors.text3 }]} numberOfLines={1}>
@@ -260,16 +261,16 @@ export default function AnalyticsScreen() {
             {/* 6-month monthly overview */}
             {hasMonthlyData && (
               <>
-                <Text style={[s.sectionTitle, { color: colors.text3 }]}>{t('monthlyOverview').toUpperCase()}</Text>
+                <Text style={[s.sectionTitle, { color: colors.text3 }]}>{t('monthlyOverview')}</Text>
                 <Card style={[s.chartCard, { borderColor: colors.border }]}>
-                  <View style={{ flexDirection: 'row', gap: 16, marginBottom: 12 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <View style={{ flexDirection: 'row', gap: spacing.lg, marginBottom: spacing.md }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
                       <View style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: colors.red }} />
-                      <Text style={{ fontSize: 11, color: colors.text3 }}>{t('expenses')}</Text>
+                      <Text style={{ ...type.small, fontSize: 11, color: colors.text3 }}>{t('expenses')}</Text>
                     </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
                       <View style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: colors.green }} />
-                      <Text style={{ fontSize: 11, color: colors.text3 }}>{t('income')}</Text>
+                      <Text style={{ ...type.small, fontSize: 11, color: colors.text3 }}>{t('income')}</Text>
                     </View>
                   </View>
                   <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
@@ -293,12 +294,13 @@ export default function AnalyticsScreen() {
                           </View>
                           <View style={{ height: 1, width: '90%', backgroundColor: colors.border, marginVertical: 4 }} />
                           <Text style={{
+                            fontFamily: isCurrentMonth ? fonts.bodySemibold : fonts.bodyMedium,
                             fontSize: 10, color: isCurrentMonth ? colors.brand : colors.text3,
-                            fontWeight: isCurrentMonth ? '700' : '500', marginBottom: 2,
+                            marginBottom: 2,
                           }}>
                             {m.label}
                           </Text>
-                          <Text style={{ fontSize: 9, color: colors.text3, height: 13 }} numberOfLines={1}>
+                          <Text style={{ fontFamily: fonts.mono, fontSize: 9, color: colors.text3, height: 13 }} numberOfLines={1}>
                             {hasData ? `${symbol}${fmt(Math.max(m.exp, m.inc))}` : ''}
                           </Text>
                         </View>
@@ -312,19 +314,19 @@ export default function AnalyticsScreen() {
             {/* Bar chart with tap-to-show */}
             {showBar && (
               <>
-                <Text style={[s.sectionTitle, { color: colors.text3 }]}>{t('spendingTrends').toUpperCase()}</Text>
+                <Text style={[s.sectionTitle, { color: colors.text3 }]}>{t('spendingTrends')}</Text>
                 <Pressable onPress={() => setSelectedBar(null)}>
                 <Card style={[s.chartCard, { borderColor: colors.border }]}>
-                  <View style={{ flexDirection: 'row', gap: 16, marginBottom: 10 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <View style={{ flexDirection: 'row', gap: spacing.lg, marginBottom: spacing.sm + 2 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
                       <View style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: colors.red }} />
-                      <Text style={{ fontSize: 11, color: colors.text3 }}>{t('expenses')}</Text>
+                      <Text style={{ ...type.small, fontSize: 11, color: colors.text3 }}>{t('expenses')}</Text>
                     </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
                       <View style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: colors.green }} />
-                      <Text style={{ fontSize: 11, color: colors.text3 }}>{t('income')}</Text>
+                      <Text style={{ ...type.small, fontSize: 11, color: colors.text3 }}>{t('income')}</Text>
                     </View>
-                    <Text style={{ fontSize: 10, color: colors.text3, fontStyle: 'italic', marginLeft: 'auto' }}>{t('dailyDistTapHint')}</Text>
+                    <Text style={{ ...type.small, fontSize: 10, color: colors.text3, fontStyle: 'italic', marginLeft: 'auto' }}>{t('dailyDistTapHint')}</Text>
                   </View>
                   <ScrollView
                     ref={trendScrollRef}
@@ -372,14 +374,14 @@ export default function AnalyticsScreen() {
                       {/* Axis baseline */}
                       <View style={{ height: 1, backgroundColor: colors.border, marginTop: 6 }} />
                       {/* Labels row */}
-                      <View style={{ flexDirection: 'row', gap: 4, marginTop: 8 }}>
+                      <View style={{ flexDirection: 'row', gap: 4, marginTop: spacing.sm }}>
                         {barData.map((b, i) => {
                           const isSel = selectedBar?.d === b.d;
                           const show = i % showEvery === 0 || i === barData.length - 1;
                           return (
                             <View key={b.d} style={{ width: COL_W, alignItems: 'center' }}>
                               {show && (
-                                <Text style={{ fontSize: 10, color: isSel ? colors.brand : colors.text3, fontWeight: isSel ? '700' : '500' }}>
+                                <Text style={{ fontFamily: fonts.mono, fontSize: 10, color: isSel ? colors.brand : colors.text3 }}>
                                   {b.label}
                                 </Text>
                               )}
@@ -392,19 +394,19 @@ export default function AnalyticsScreen() {
 
                   {selectedBar && (
                     <View style={[s.tooltip, { borderTopColor: colors.border, backgroundColor: colors.surface2 }]}>
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
                         <Text style={[s.tooltipDate, { color: colors.text1 }]}>{selectedBar.d}</Text>
-                        <View style={{ flexDirection: 'row', gap: 12 }}>
+                        <View style={{ flexDirection: 'row', gap: spacing.md }}>
                           {selectedBar.inc > 0 && (
-                            <Text style={{ fontSize: 12, fontWeight: '700', color: colors.green }}>+{symbol}{fmt(selectedBar.inc)}</Text>
+                            <Text style={{ fontFamily: fonts.monoMedium, fontSize: 12, color: colors.green }}>+{symbol}{fmt(selectedBar.inc)}</Text>
                           )}
                           {selectedBar.exp > 0 && (
-                            <Text style={{ fontSize: 12, fontWeight: '700', color: colors.red }}>-{symbol}{fmt(selectedBar.exp)}</Text>
+                            <Text style={{ fontFamily: fonts.monoMedium, fontSize: 12, color: colors.red }}>-{symbol}{fmt(selectedBar.exp)}</Text>
                           )}
                         </View>
                       </View>
                       {selectedBar.txs.length === 0 ? (
-                        <Text style={{ fontSize: 12, color: colors.text3 }}>{t('dailyDistEmpty')}</Text>
+                        <Text style={{ ...type.small, fontSize: 12, color: colors.text3 }}>{t('dailyDistEmpty')}</Text>
                       ) : (
                         selectedBar.txs
                           .slice()
@@ -412,10 +414,10 @@ export default function AnalyticsScreen() {
                           .map(tx => (
                             <View key={tx.id} style={s.tooltipTxRow}>
                               <View style={[s.tooltipDot, { backgroundColor: getCatColor(tx.category, tx.type) }]} />
-                              <Text style={{ flex: 1, fontSize: 12, color: colors.text2 }} numberOfLines={1}>
+                              <Text style={{ flex: 1, ...type.small, fontSize: 12, color: colors.text2 }} numberOfLines={1}>
                                 {tx.description || t(tx.category)}
                               </Text>
-                              <Text style={{ fontSize: 12, fontWeight: '600', color: tx.type === 'income' ? colors.green : colors.red }}>
+                              <Text style={{ fontFamily: fonts.monoMedium, fontSize: 12, color: tx.type === 'income' ? colors.green : colors.red }}>
                                 {tx.type === 'income' ? '+' : '-'}{symbol}{fmt(tx.amount)}
                               </Text>
                             </View>
@@ -431,7 +433,7 @@ export default function AnalyticsScreen() {
             {/* Category breakdown - stacked layout to avoid overflow */}
             {catData.length > 0 && (
               <>
-                <Text style={[s.sectionTitle, { color: colors.text3 }]}>{t('byCategory').toUpperCase()}</Text>
+                <Text style={[s.sectionTitle, { color: colors.text3 }]}>{t('byCategory')}</Text>
                 <Card style={[s.listCard, { borderColor: colors.border }]}>
                   {catData.map(({ name, value }, i) => {
                     const pct = totalExp > 0 ? (value / totalExp) * 100 : 0;
@@ -458,7 +460,7 @@ export default function AnalyticsScreen() {
             {/* Top movers - stacked layout */}
             {topMovers.length > 0 && (
               <>
-                <Text style={[s.sectionTitle, { color: colors.text3 }]}>{t('topMovers').toUpperCase()}</Text>
+                <Text style={[s.sectionTitle, { color: colors.text3 }]}>{t('topMovers')}</Text>
                 <Card style={[s.listCard, { borderColor: colors.border }]}>
                   {topMovers.map(({ cat, diff, pct, cur, prev }, i) => {
                     const up = diff > 0;
@@ -472,14 +474,14 @@ export default function AnalyticsScreen() {
                           </Text>
                         </View>
                         <View style={{ alignItems: 'flex-end' }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
                             <Ionicons name={up ? 'arrow-up' : 'arrow-down'} size={14} color={up ? colors.red : colors.green} />
-                            <Text style={{ fontSize: 13, fontWeight: '700', color: up ? colors.red : colors.green }}>
+                            <Text style={{ fontFamily: fonts.monoMedium, fontSize: 13, color: up ? colors.red : colors.green }}>
                               {up ? '+' : ''}{symbol}{fmt(Math.abs(diff))}
                             </Text>
                           </View>
                           {prev > 0 && (
-                            <Text style={{ fontSize: 11, color: colors.text3, marginTop: 2 }}>
+                            <Text style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.text3, marginTop: 2 }}>
                               {up ? '+' : ''}{pct.toFixed(0)}%
                             </Text>
                           )}
@@ -492,9 +494,9 @@ export default function AnalyticsScreen() {
             )}
 
             {filtered.length === 0 && (
-              <View style={{ alignItems: 'center', paddingVertical: 32 }}>
-                <Text style={{ fontSize: 32, marginBottom: 8 }}>📭</Text>
-                <Text style={{ color: colors.text3, fontSize: 14 }}>{t('noTransactions')}</Text>
+              <View style={{ alignItems: 'center', paddingVertical: spacing['3xl'] }}>
+                <Ionicons name="mail-open-outline" size={36} color={colors.text3} style={{ marginBottom: spacing.sm }} />
+                <Text style={{ color: colors.text3, ...type.body }}>{t('noTransactions')}</Text>
               </View>
             )}
           </>
@@ -505,32 +507,33 @@ export default function AnalyticsScreen() {
 }
 
 const s = StyleSheet.create({
-  scroll: { padding: 16, paddingBottom: 32 },
-  pageTitle: { fontSize: 24, fontWeight: '700', letterSpacing: -0.5, marginBottom: 20 },
-  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1 },
-  metricsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
-  metricCard: { flex: 1, minWidth: '45%', padding: 14 },
-  metricLabel: { fontSize: 10, fontWeight: '600', letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 6 },
-  metricValue: { fontSize: 18, fontWeight: '700', letterSpacing: -0.3, marginBottom: 4 },
-  metricSub: { fontSize: 11 },
-  sectionTitle: { fontSize: 10, fontWeight: '700', letterSpacing: 1, marginBottom: 10, marginTop: 8 },
-  chartCard: { padding: 16, marginBottom: 8, overflow: 'hidden' },
-  listCard: { marginBottom: 8, overflow: 'hidden' },
-  catBlock: { paddingHorizontal: 14, paddingVertical: 12 },
-  catBlockTop: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 },
-  catBlockBot: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  scroll: { padding: spacing.lg, paddingBottom: spacing['3xl'] },
+  pageTitle: { ...type.h2Serif, fontSize: 26, marginBottom: spacing.xl },
+  chip: { paddingHorizontal: spacing.md + 2, paddingVertical: spacing.sm, borderRadius: radius.pill, borderWidth: 1 },
+  metricsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm + 2, marginBottom: spacing.lg },
+  metricCard: { flex: 1, minWidth: '45%', padding: spacing.md + 2 },
+  metricLabel: { ...type.label, marginBottom: spacing.xs + 2 },
+  metricValue: { ...type.h3, fontSize: 18, marginBottom: spacing.xs },
+  metricValueMono: { fontFamily: fonts.monoMedium, fontSize: 18, letterSpacing: -0.3, marginBottom: spacing.xs },
+  metricSub: { fontFamily: fonts.body, fontSize: 11 },
+  sectionTitle: { ...type.label, marginBottom: spacing.sm + 2, marginTop: spacing.sm },
+  chartCard: { padding: spacing.lg, marginBottom: spacing.sm, overflow: 'hidden' },
+  listCard: { marginBottom: spacing.sm, overflow: 'hidden' },
+  catBlock: { paddingHorizontal: spacing.md + 2, paddingVertical: spacing.md },
+  catBlockTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm + 2, marginBottom: spacing.xs + 2 },
+  catBlockBot: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   catDot: { width: 10, height: 10, borderRadius: 5, flexShrink: 0 },
-  catName: { flex: 1, fontSize: 14, fontWeight: '600' },
-  catAmt: { fontSize: 14, fontWeight: '700' },
+  catName: { flex: 1, fontFamily: fonts.bodySemibold, fontSize: 14 },
+  catAmt: { fontFamily: fonts.monoMedium, fontSize: 14 },
   catBar: { flex: 1, height: 6, borderRadius: 3, overflow: 'hidden' },
   catBarFill: { height: '100%', borderRadius: 3 },
-  catPct: { fontSize: 11, fontWeight: '600', minWidth: 40, textAlign: 'right' },
-  moverRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 12 },
-  moverSub: { fontSize: 11, marginTop: 2 },
-  tooltip: { marginTop: 10, padding: 12, borderTopWidth: 1, borderRadius: 8, marginHorizontal: -2 },
-  tooltipDate: { fontSize: 12, fontWeight: '700' },
-  tooltipTxRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 3 },
+  catPct: { fontFamily: fonts.mono, fontSize: 11, minWidth: 40, textAlign: 'right' },
+  moverRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm + 2, paddingHorizontal: spacing.md + 2, paddingVertical: spacing.md },
+  moverSub: { fontFamily: fonts.mono, fontSize: 11, marginTop: 2 },
+  tooltip: { marginTop: spacing.sm + 2, padding: spacing.md, borderTopWidth: 1, borderRadius: radius.sm, marginHorizontal: -2 },
+  tooltipDate: { fontFamily: fonts.monoMedium, fontSize: 12 },
+  tooltipTxRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 3 },
   tooltipDot: { width: 6, height: 6, borderRadius: 3, flexShrink: 0 },
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 80 },
-  emptyText: { fontSize: 15 },
+  emptyText: { ...type.body, fontSize: 15 },
 });

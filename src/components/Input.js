@@ -1,6 +1,8 @@
 import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { spacing, radius, type, fonts } from '../constants/tokens';
 
 export default function Input({
   label, value, onChangeText, placeholder, secureTextEntry,
@@ -33,7 +35,7 @@ export default function Input({
         />
         {isPassword && (
           <TouchableOpacity onPress={() => setShowPassword(v => !v)} style={styles.eyeBtn}>
-            <Text style={{ color: colors.text3, fontSize: 13 }}>{showPassword ? '👁' : '👁‍🗨'}</Text>
+            <Ionicons name={showPassword ? 'eye-outline' : 'eye-off-outline'} size={18} color={colors.text3} />
           </TouchableOpacity>
         )}
       </View>
@@ -43,14 +45,12 @@ export default function Input({
 
 const styles = StyleSheet.create({
   label: {
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    marginBottom: 6,
+    ...type.label,
+    fontSize: 10,
+    marginBottom: spacing.xs + 2,
   },
   inputWrap: {
-    borderRadius: 10,
+    borderRadius: radius.sm + 2,
     borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
@@ -58,11 +58,12 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: 44,
-    paddingHorizontal: 14,
+    paddingHorizontal: spacing.md + 2,
+    fontFamily: fonts.body,
     fontSize: 15,
   },
   eyeBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
 });

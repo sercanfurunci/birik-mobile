@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, TouchableOpacity, Modal, FlatList, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import { spacing, radius, type, fonts } from '../constants/tokens';
 
 export default function Dropdown({
   value,
@@ -81,22 +82,22 @@ export default function Dropdown({
 }
 
 const s = StyleSheet.create({
-  label: { fontSize: 11, fontWeight: '600', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 8 },
+  label: { ...type.label, fontSize: 10, marginBottom: spacing.sm },
   trigger: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: spacing.sm + 2,
     borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
+    borderRadius: radius.sm + 2,
+    paddingHorizontal: spacing.md + 2,
     height: 46,
   },
-  triggerText: { flex: 1, fontSize: 14, fontWeight: '500' },
+  triggerText: { flex: 1, fontFamily: fonts.bodyMedium, fontSize: 14 },
   dot: { width: 10, height: 10, borderRadius: 5, flexShrink: 0 },
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 },
-  sheet: { borderRadius: 16, borderWidth: 1, overflow: 'hidden', maxHeight: '70%' },
-  sheetHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, borderBottomWidth: 1 },
-  sheetTitle: { fontSize: 16, fontWeight: '700' },
-  option: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
-  optionText: { flex: 1, fontSize: 15 },
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: spacing.xl },
+  sheet: { borderRadius: radius.lg, borderWidth: 1, overflow: 'hidden', maxHeight: '70%' },
+  sheetHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing.lg, borderBottomWidth: 1 },
+  sheetTitle: { ...type.h2Serif, fontSize: 18 },
+  option: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.lg, paddingVertical: spacing.md + 2 },
+  optionText: { flex: 1, fontFamily: fonts.body, fontSize: 15 },
 });

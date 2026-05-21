@@ -21,6 +21,7 @@ import { fmt } from '../../utils/format';
 import { todayLocalISO } from '../../utils/dateUtils';
 import { API, authFetch } from '../../utils/api';
 import { getToken } from '../../utils/tokenStorage';
+import { spacing, radius, type, fonts } from '../../constants/tokens';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
@@ -365,18 +366,18 @@ export default function TransactionsScreen({ navigation }) {
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Text style={[styles.headerTitle, { color: colors.text1 }]}>{t('transactions')}</Text>
-        <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-          <TouchableOpacity onPress={() => navigation.navigate('Recurring')} style={[styles.addBtn, { backgroundColor: colors.surface2, borderWidth: 1, borderColor: colors.border }]}>
+        <View style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
+          <TouchableOpacity onPress={() => navigation.navigate('Recurring')} style={[styles.iconBtn, { backgroundColor: colors.surface2, borderColor: colors.border }]}>
             <Ionicons name="repeat-outline" size={18} color={colors.text2} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => { setImportPreview(null); setShowImportModal(true); }} style={[styles.addBtn, { backgroundColor: colors.surface2, borderWidth: 1, borderColor: colors.border }]}>
+          <TouchableOpacity onPress={() => { setImportPreview(null); setShowImportModal(true); }} style={[styles.iconBtn, { backgroundColor: colors.surface2, borderColor: colors.border }]}>
             <Ionicons name="scan-outline" size={18} color={colors.text2} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleExport} disabled={filtered.length === 0} style={[styles.addBtn, { backgroundColor: colors.surface2, borderWidth: 1, borderColor: colors.border, opacity: filtered.length === 0 ? 0.4 : 1 }]}>
+          <TouchableOpacity onPress={handleExport} disabled={filtered.length === 0} style={[styles.iconBtn, { backgroundColor: colors.surface2, borderColor: colors.border, opacity: filtered.length === 0 ? 0.4 : 1 }]}>
             <Ionicons name="download-outline" size={18} color={colors.text2} />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setShowAddModal(true)} style={[styles.addBtn, { backgroundColor: colors.brand }]}>
-            <Text style={{ color: '#fff', fontSize: 20, lineHeight: 24 }}>+</Text>
+            <Ionicons name="add" size={22} color="#fff" />
           </TouchableOpacity>
         </View>
       </View>
@@ -384,17 +385,17 @@ export default function TransactionsScreen({ navigation }) {
       {/* Search & filters */}
       <View style={[styles.searchBar, { borderBottomColor: colors.border }]}>
         <View style={[styles.searchInput, { backgroundColor: colors.surface2, borderColor: colors.border }]}>
-          <Text style={{ color: colors.text3, marginRight: 8 }}>🔍</Text>
+          <Ionicons name="search-outline" size={16} color={colors.text3} style={{ marginRight: spacing.sm }} />
           <TextInput
             value={search}
             onChangeText={setSearch}
             placeholder={t('searchPlaceholder')}
             placeholderTextColor={colors.text3}
-            style={{ flex: 1, color: colors.text1, fontSize: 14 }}
+            style={{ flex: 1, color: colors.text1, fontFamily: fonts.body, fontSize: 14 }}
           />
           {!!search && (
             <TouchableOpacity onPress={() => setSearch('')}>
-              <Text style={{ color: colors.text3, fontSize: 16 }}>✕</Text>
+              <Ionicons name="close-circle" size={18} color={colors.text3} />
             </TouchableOpacity>
           )}
         </View>
@@ -402,7 +403,7 @@ export default function TransactionsScreen({ navigation }) {
           onPress={() => setShowFilters(f => !f)}
           style={[styles.filterBtn, { backgroundColor: showFilters ? colors.brand : colors.surface, borderColor: colors.border }]}
         >
-          <Text style={{ fontSize: 14, color: showFilters ? '#fff' : colors.text2 }}>⚙</Text>
+          <Ionicons name="options-outline" size={16} color={showFilters ? '#fff' : colors.text2} />
         </TouchableOpacity>
       </View>
 
@@ -460,7 +461,9 @@ export default function TransactionsScreen({ navigation }) {
       >
         {filtered.length === 0 ? (
           <View style={styles.empty}>
-            <Text style={{ fontSize: 36, marginBottom: 12 }}>📋</Text>
+            <View style={[styles.emptyIconWrap, { backgroundColor: colors.brandDim }]}>
+              <Ionicons name="receipt-outline" size={28} color={colors.brand} />
+            </View>
             <Text style={[styles.emptyText, { color: colors.text3 }]}>{t('noTransactions')}</Text>
           </View>
         ) : (
@@ -484,7 +487,7 @@ export default function TransactionsScreen({ navigation }) {
                     <Text style={[styles.txAmt, { color: tx.type === 'income' ? colors.green : colors.red }]}>
                       {tx.type === 'income' ? '+' : '-'}{symbol}{fmt(tx.amount)}
                     </Text>
-                    <Text style={{ fontSize: 11, color: colors.text3, marginTop: 2 }}>
+                    <Text style={[styles.txBalance, { color: colors.text3 }]}>
                       {t('balance')}: {(balanceMap[tx.id] ?? 0) < 0 ? '-' : ''}{symbol}{fmt(Math.abs(balanceMap[tx.id] ?? 0))}
                     </Text>
                   </View>
@@ -625,14 +628,14 @@ export default function TransactionsScreen({ navigation }) {
                       { backgroundColor: colors.surface, borderColor: colors.border, flexDirection: 'column', alignItems: 'stretch', gap: 8, opacity: pressed ? 0.7 : 1 },
                     ]}
                   >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
                       <View style={{ flex: 1, minWidth: 0 }}>
-                        <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text1 }} numberOfLines={1}>
+                        <Text style={{ fontFamily: fonts.bodySemibold, fontSize: 14, color: colors.text1, letterSpacing: -0.2 }} numberOfLines={1}>
                           {item.description}
                         </Text>
-                        <Text style={{ fontSize: 12, color: colors.text3 }}>{item.date}</Text>
+                        <Text style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.text3, marginTop: 2 }}>{item.date}</Text>
                       </View>
-                      <Text style={{ fontSize: 15, fontWeight: '700', color: item.type === 'income' ? colors.green : colors.red }}>
+                      <Text style={{ fontFamily: fonts.monoMedium, fontSize: 15, color: item.type === 'income' ? colors.green : colors.red }}>
                         {item.type === 'income' ? '+' : '-'}{fmt(item.amount)}
                       </Text>
                     </View>
@@ -801,39 +804,40 @@ export default function TransactionsScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
-  headerTitle: { fontSize: 20, fontWeight: '700' },
-  addBtn: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
-  searchBar: { flexDirection: 'row', gap: 10, padding: 12, borderBottomWidth: 1 },
-  searchInput: { flex: 1, flexDirection: 'row', alignItems: 'center', borderRadius: 10, borderWidth: 1, paddingHorizontal: 12, height: 38 },
-  filterBtn: { width: 38, height: 38, borderRadius: 10, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
-  filterPanel: { padding: 12, borderBottomWidth: 1 },
-  chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1 },
-  list: { padding: 16, paddingBottom: 32 },
-  empty: { alignItems: 'center', marginTop: 80 },
-  emptyText: { fontSize: 15 },
-  txCard: { flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: 12, borderWidth: 1, gap: 12 },
-  txIcon: { width: 40, height: 40, borderRadius: 10, justifyContent: 'center', alignItems: 'center', flexShrink: 0 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderBottomWidth: 1 },
+  headerTitle: { ...type.h2Serif, fontSize: 26 },
+  iconBtn: { width: 36, height: 36, borderRadius: radius.md, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
+  addBtn: { width: 36, height: 36, borderRadius: radius.md, justifyContent: 'center', alignItems: 'center' },
+  searchBar: { flexDirection: 'row', gap: spacing.sm, padding: spacing.md, borderBottomWidth: 1 },
+  searchInput: { flex: 1, flexDirection: 'row', alignItems: 'center', borderRadius: radius.md, borderWidth: 1, paddingHorizontal: spacing.md, height: 40 },
+  filterBtn: { width: 40, height: 40, borderRadius: radius.md, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
+  filterPanel: { padding: spacing.md, borderBottomWidth: 1 },
+  list: { padding: spacing.lg, paddingBottom: spacing['3xl'] },
+  empty: { alignItems: 'center', marginTop: spacing['5xl'] + spacing.xl },
+  emptyIconWrap: { width: 64, height: 64, borderRadius: radius.lg, justifyContent: 'center', alignItems: 'center', marginBottom: spacing.lg },
+  emptyText: { ...type.body, textAlign: 'center' },
+  txCard: { flexDirection: 'row', alignItems: 'center', padding: spacing.md + 2, borderRadius: radius.md, borderWidth: 1, gap: spacing.md },
+  txIcon: { width: 40, height: 40, borderRadius: radius.md, justifyContent: 'center', alignItems: 'center', flexShrink: 0 },
   txIconDot: { width: 10, height: 10, borderRadius: 5 },
-  txDesc: { fontSize: 14, fontWeight: '500', marginBottom: 3 },
-  txMeta: { fontSize: 12 },
-  txAmt: { fontSize: 14, fontWeight: '700' },
-  modal: { padding: 24, paddingBottom: 48 },
-  dragHandle: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: 24 },
-  closeBtn: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 },
-  modalTitle: { fontSize: 20, fontWeight: '700' },
-  fieldLabel: { fontSize: 12, fontWeight: '600', letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 8 },
-  toggle: { flexDirection: 'row', borderRadius: 10, padding: 4, borderWidth: 1, gap: 4, marginBottom: 4 },
-  toggleBtn: { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
-  catChip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1 },
-  importCard: { borderRadius: 16, borderWidth: 1, overflow: 'hidden', marginBottom: 8 },
-  importRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16 },
-  importIconWrap: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  deleteSheet: { borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 40 },
-  deleteIconWrap: { width: 60, height: 60, borderRadius: 18, justifyContent: 'center', alignItems: 'center', alignSelf: 'center', marginBottom: 16 },
-  deleteTitle: { fontSize: 18, fontWeight: '700', textAlign: 'center', marginBottom: 8 },
-  deleteSub: { fontSize: 14, textAlign: 'center', lineHeight: 22, marginBottom: 28 },
-  deleteConfirmBtn: { paddingVertical: 15, borderRadius: 14, alignItems: 'center', marginBottom: 10 },
-  deleteCancelBtn: { paddingVertical: 15, borderRadius: 14, alignItems: 'center', borderWidth: 1 },
+  txDesc: { fontFamily: fonts.bodySemibold, fontSize: 14, marginBottom: 3, letterSpacing: -0.2 },
+  txMeta: { ...type.small, fontSize: 12 },
+  txAmt: { fontFamily: fonts.monoMedium, fontSize: 15, letterSpacing: -0.3 },
+  txBalance: { fontFamily: fonts.mono, fontSize: 10, marginTop: 3 },
+  modal: { padding: spacing['2xl'], paddingBottom: spacing['4xl'] + spacing.sm },
+  dragHandle: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: spacing['2xl'] },
+  closeBtn: { width: 32, height: 32, borderRadius: radius.pill, justifyContent: 'center', alignItems: 'center' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing['2xl'] + 4 },
+  modalTitle: { ...type.h2Serif, fontSize: 22 },
+  fieldLabel: { ...type.label, marginBottom: spacing.sm },
+  toggle: { flexDirection: 'row', borderRadius: radius.md, padding: 4, borderWidth: 1, gap: 4, marginBottom: 4 },
+  toggleBtn: { flex: 1, paddingVertical: spacing.sm, borderRadius: radius.sm, alignItems: 'center' },
+  importCard: { borderRadius: radius.lg, borderWidth: 1, overflow: 'hidden', marginBottom: spacing.sm },
+  importRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md + 2, padding: spacing.lg },
+  importIconWrap: { width: 44, height: 44, borderRadius: radius.md, justifyContent: 'center', alignItems: 'center' },
+  deleteSheet: { borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: spacing['2xl'], paddingBottom: spacing['4xl'] },
+  deleteIconWrap: { width: 60, height: 60, borderRadius: radius.lg, justifyContent: 'center', alignItems: 'center', alignSelf: 'center', marginBottom: spacing.lg },
+  deleteTitle: { ...type.h3, textAlign: 'center', marginBottom: spacing.sm },
+  deleteSub: { ...type.body, textAlign: 'center', marginBottom: spacing['2xl'] + 4 },
+  deleteConfirmBtn: { paddingVertical: 15, borderRadius: radius.md + 2, alignItems: 'center', marginBottom: spacing.sm + 2 },
+  deleteCancelBtn: { paddingVertical: 15, borderRadius: radius.md + 2, alignItems: 'center', borderWidth: 1 },
 });
