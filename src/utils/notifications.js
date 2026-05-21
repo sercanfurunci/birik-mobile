@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { advanceToNextBilling } from './dateUtils';
 import { tForLang, getStoredLang } from '../context/LangContext';
+import { getPref } from './notificationPrefs';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -65,6 +66,8 @@ export async function scheduleSubscriptionReminders(subscriptions) {
     }
   }
 
+  if (!(await getPref('subscriptions'))) return;
+
   for (const sub of subscriptions) {
     if (!sub.reminder_days) continue;
     // Use advanceToNextBilling so past dates are correctly advanced
@@ -94,6 +97,7 @@ export async function scheduleSubscriptionReminders(subscriptions) {
 // ── Budgets ───────────────────────────────────────────────────────────────────
 
 export async function notifyBudgetExceeded(categoryLabel, spent, limit, symbol, categoryId, monthKey) {
+  if (!(await getPref('budgets'))) return;
   const key = `budget_exceeded_${categoryId}_${monthKey}`;
   if (await wasSent(key)) return;
   await markSent(key);
@@ -106,6 +110,7 @@ export async function notifyBudgetExceeded(categoryLabel, spent, limit, symbol, 
 }
 
 export async function notifyBudgetWarning(categoryLabel, percent, symbol, spent, limit, categoryId, monthKey) {
+  if (!(await getPref('budgets'))) return;
   const key = `budget_warning_${categoryId}_${monthKey}`;
   if (await wasSent(key)) return;
   await markSent(key);
@@ -120,6 +125,7 @@ export async function notifyBudgetWarning(categoryLabel, percent, symbol, spent,
 // ── Goals ─────────────────────────────────────────────────────────────────────
 
 export async function notifyGoalProgress(goalName, goalId, pct) {
+  if (!(await getPref('goals'))) return;
   if (pct >= 100) {
     const key = `goal_complete_${goalId}`;
     if (await wasSent(key)) return;
@@ -152,6 +158,8 @@ export async function scheduleRecurringReminders(rules) {
       await Notifications.cancelScheduledNotificationAsync(n.identifier);
     }
   }
+
+  if (!(await getPref('recurring'))) return;
 
   const now = new Date();
   const today = new Date(now); today.setHours(0, 0, 0, 0);

@@ -15,6 +15,8 @@ import { isBiometricAvailable, getBiometricLockEnabled, setBiometricLockEnabled,
 import { CURRENCIES } from '../../constants/currencies';
 import { spacing, radius, type, fonts } from '../../constants/tokens';
 import Dropdown from '../../components/Dropdown';
+import { getAllPrefs, setPref } from '../../utils/notificationPrefs';
+import { requestNotificationPermission, scheduleSubscriptionReminders, scheduleRecurringReminders } from '../../utils/notifications';
 
 function Section({ title, children, colors }) {
   return (
@@ -47,10 +49,33 @@ export default function ProfileScreen() {
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [biometricEnabled, setBiometricEnabled] = useState(false);
 
+  const [notifPrefs, setNotifPrefs] = useState({
+    master: true, budgets: true, goals: true, subscriptions: true, recurring: true,
+  });
+
   useEffect(() => {
     isBiometricAvailable().then(setBiometricAvailable);
     getBiometricLockEnabled().then(setBiometricEnabled);
+    getAllPrefs().then(setNotifPrefs);
   }, []);
+
+  const toggleNotifPref = async (key, val) => {
+    if (val && key === 'master') {
+      const granted = await requestNotificationPermission();
+      if (!granted) { showToast(t('serverError'), 'error'); return; }
+    }
+    await setPref(key, val);
+    const next = { ...notifPrefs, [key]: val };
+    setNotifPrefs(next);
+
+    const subsActive = next.master && next.subscriptions;
+    const recActive = next.master && next.recurring;
+
+    try {
+      if (!subsActive) await scheduleSubscriptionReminders([]);
+      if (!recActive) await scheduleRecurringReminders([]);
+    } catch {}
+  };
 
   const toggleBiometric = async (val) => {
     if (val) {
@@ -223,6 +248,44 @@ export default function ProfileScreen() {
           )}
         </Section>
 
+        {/* Notifications */}
+        <Section title={t('notifications')} colors={colors}>
+          <View style={s.notifRow}>
+            <Ionicons name="notifications" size={18} color={colors.text2} />
+            <View style={s.notifTextWrap}>
+              <Text style={s.notifLabel}>{t('notifEnableAll')}</Text>
+              <Text style={s.notifDesc}>{t('notifEnableAllDesc')}</Text>
+            </View>
+            <Switch
+              value={notifPrefs.master}
+              onValueChange={(v) => toggleNotifPref('master', v)}
+              trackColor={{ false: colors.border, true: colors.brand }}
+              thumbColor="#fff"
+            />
+          </View>
+          {[
+            { key: 'budgets', icon: 'pie-chart-outline', label: 'notifBudgets', desc: 'notifBudgetsDesc' },
+            { key: 'goals', icon: 'trophy-outline', label: 'notifGoals', desc: 'notifGoalsDesc' },
+            { key: 'subscriptions', icon: 'repeat-outline', label: 'notifSubscriptions', desc: 'notifSubscriptionsDesc' },
+            { key: 'recurring', icon: 'time-outline', label: 'notifRecurring', desc: 'notifRecurringDesc' },
+          ].map(row => (
+            <View key={row.key} style={[s.notifRow, s.prefDivider, !notifPrefs.master && { opacity: 0.4 }]}>
+              <Ionicons name={row.icon} size={18} color={colors.text2} />
+              <View style={s.notifTextWrap}>
+                <Text style={s.notifLabel}>{t(row.label)}</Text>
+                <Text style={s.notifDesc}>{t(row.desc)}</Text>
+              </View>
+              <Switch
+                value={notifPrefs.master && notifPrefs[row.key]}
+                onValueChange={(v) => toggleNotifPref(row.key, v)}
+                disabled={!notifPrefs.master}
+                trackColor={{ false: colors.border, true: colors.brand }}
+                thumbColor="#fff"
+              />
+            </View>
+          ))}
+        </Section>
+
         {/* Currency */}
         <Section title={t('currencyLabel')} colors={colors}>
           <View style={s.currencyGrid}>
@@ -390,6 +453,11 @@ const makeStyles = (colors) => StyleSheet.create({
   prefDivider: { borderTopWidth: 1, borderTopColor: colors.border },
   prefLabel: { flex: 1, ...type.bodyMd, fontFamily: fonts.bodyMedium, color: colors.text1 },
   prefDropdown: { minWidth: 140 },
+
+  notifRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.md + 2, paddingVertical: spacing.md },
+  notifTextWrap: { flex: 1 },
+  notifLabel: { ...type.bodyMd, fontFamily: fonts.bodyMedium, color: colors.text1 },
+  notifDesc: { ...type.small, color: colors.text3, marginTop: 2 },
 
   legalRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xs, marginBottom: spacing.xs },
   legalLink: { ...type.small, color: colors.text3, textDecorationLine: 'underline' },

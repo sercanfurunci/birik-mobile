@@ -8,6 +8,7 @@ import Input from '../../components/Input';
 import Button from '../../components/Button';
 import { API } from '../../utils/api';
 import { spacing, radius, type, fonts } from '../../constants/tokens';
+import { startPhoneVerification } from '../../utils/firebaseAuth';
 
 function validatePassword(password, t) {
   if (password.length < 8) return t('passwordTooShort');
@@ -54,16 +55,28 @@ export default function RegisterScreen({ navigation }) {
     const pwError = validatePassword(password, t);
     if (pwError) { setError(pwError); return; }
     if (password !== confirm) { setError(t('passwordMismatch')); return; }
+
+    if (verifyMethod === 'sms') {
+      const trimmed = phone.trim();
+      if (!/^\+[1-9]\d{6,14}$/.test(trimmed)) { setError(t('invalidPhone')); return; }
+      setLoading(true);
+      try {
+        await startPhoneVerification(trimmed);
+        navigation.navigate('VerifyPhone', { phone: trimmed, password });
+      } catch {
+        setError(t('phoneSendError'));
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     setLoading(true);
     try {
-      const body = verifyMethod === 'email'
-        ? { email, password }
-        : { phone, password };
-      const endpoint = verifyMethod === 'email' ? '/auth/register' : '/auth/register-phone';
-      const res = await fetch(`${API}${endpoint}`, {
+      const res = await fetch(`${API}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Registration failed'); return; }

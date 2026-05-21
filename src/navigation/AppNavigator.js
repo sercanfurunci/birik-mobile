@@ -10,6 +10,7 @@ import { useLang } from '../context/LangContext';
 import LandingScreen from '../screens/auth/LandingScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
+import VerifyPhoneScreen from '../screens/auth/VerifyPhoneScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import LegalScreen from '../screens/auth/LegalScreen';
 
@@ -101,6 +102,7 @@ export default function AppNavigator() {
             <Stack.Screen name="Landing"        component={LandingScreen} />
             <Stack.Screen name="Login"          component={LoginScreen} />
             <Stack.Screen name="Register"       component={RegisterScreen} />
+            <Stack.Screen name="VerifyPhone"    component={VerifyPhoneScreen} />
             <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
             <Stack.Screen name="Legal"          component={LegalScreen} />
           </>
