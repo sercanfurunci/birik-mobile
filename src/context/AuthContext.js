@@ -4,6 +4,8 @@ import { API, authFetch, queuedAuthFetch } from '../utils/api';
 import { getQueue, removeFromQueue } from '../utils/offlineQueue';
 import { getBiometricLockEnabled } from '../utils/biometric';
 import { getToken, setToken, removeToken } from '../utils/tokenStorage';
+import { getCachedUser, setCachedUser, clearCachedUser } from '../utils/userCache';
+import { clearAllCache, cacheFetch, setCached } from '../utils/cacheFetch';
 
 const AuthContext = createContext(null);
 
@@ -21,9 +23,28 @@ export function AuthProvider({ children }) {
       try {
         const token = await getToken();
         if (!token) return;
-        const res = await authFetch(`${API}/auth/me`);
+
+        const cached = await getCachedUser();
+        const bioEnabled = await getBiometricLockEnabled();
+
+        if (cached?.id) {
+          if (bioEnabled) setPendingBioUser(cached);
+          else setCurrentUser(cached);
+        }
+
+        const net = await NetInfo.fetch();
+        const online = !!(net.isConnected && net.isInternetReachable !== false);
+        if (!online) return;
+
+        let res;
+        try { res = await authFetch(`${API}/auth/me`); } catch { return; }
         if (!res.ok) {
-          await removeToken();
+          if (res.status === 401 || res.status === 403) {
+            await removeToken();
+            await clearCachedUser();
+            setPendingBioUser(null);
+            setCurrentUser(null);
+          }
           return;
         }
         const data = await res.json();
@@ -36,11 +57,13 @@ export function AuthProvider({ children }) {
           currency: data.currency || 'USD',
           custom_categories: data.custom_categories || [],
         };
-        const bioEnabled = await getBiometricLockEnabled();
-        if (bioEnabled) {
-          setPendingBioUser(user);
+        await setCachedUser(user);
+        if (!cached?.id) {
+          if (bioEnabled) setPendingBioUser(user);
+          else setCurrentUser(user);
         } else {
-          setCurrentUser(user);
+          if (bioEnabled) setPendingBioUser(prev => prev ? user : prev);
+          else setCurrentUser(prev => prev ? user : prev);
         }
       } catch {}
       finally { setAuthChecked(true); }
@@ -48,10 +71,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   const refreshTransactions = useCallback(() => {
-    return authFetch(`${API}/transactions`)
-      .then(res => res.json())
-      .then(data => Array.isArray(data) && setTransactions(data))
-      .catch(() => {});
+    return cacheFetch(`${API}/transactions`, (data) => {
+      if (Array.isArray(data)) setTransactions(data);
+    });
   }, []);
 
   useEffect(() => {
@@ -60,6 +82,7 @@ export function AuthProvider({ children }) {
 
   const handleAuthSuccess = useCallback(async (user, token) => {
     if (token) await setToken(token);
+    await setCachedUser(user);
     setPendingBioUser(null);
     setCurrentUser(user);
   }, []);
@@ -74,13 +97,19 @@ export function AuthProvider({ children }) {
   const handleLogout = useCallback(async () => {
     try { await authFetch(`${API}/auth/logout`, { method: 'POST' }); } catch {}
     await removeToken();
+    await clearCachedUser();
+    await clearAllCache();
     setPendingBioUser(null);
     setCurrentUser(null);
     setTransactions([]);
   }, []);
 
   const updateUser = useCallback((updates) => {
-    setCurrentUser(prev => ({ ...prev, ...updates }));
+    setCurrentUser(prev => {
+      const next = { ...prev, ...updates };
+      setCachedUser(next).catch(() => {});
+      return next;
+    });
   }, []);
 
   const syncOfflineQueue = useCallback(async () => {
@@ -101,16 +130,24 @@ export function AuthProvider({ children }) {
           if (isTransactionPost) {
             const real = await res.json();
             if (real?.id) {
-              setTransactions(prev => prev.map(tx =>
-                tx.id === item.tempId ? { ...real, _pending: false } : tx
-              ));
+              setTransactions(prev => {
+                const next = prev.map(tx =>
+                  tx.id === item.tempId ? { ...real, _pending: false } : tx
+                );
+                setCached(`${API}/transactions`, next).catch(() => {});
+                return next;
+              });
             }
           } else if (isTransactionPut) {
             const real = await res.json();
             if (real?.id) {
-              setTransactions(prev => prev.map(tx =>
-                tx.id === real.id ? { ...real, _pending: false } : tx
-              ));
+              setTransactions(prev => {
+                const next = prev.map(tx =>
+                  tx.id === real.id ? { ...real, _pending: false } : tx
+                );
+                setCached(`${API}/transactions`, next).catch(() => {});
+                return next;
+              });
             }
           }
 
@@ -142,7 +179,11 @@ export function AuthProvider({ children }) {
     if (!res.ok) return null;
     const data = await res.json();
     if (!data?.id) return null;
-    setTransactions(prev => [data, ...prev]);
+    setTransactions(prev => {
+      const next = [data, ...prev];
+      setCached(`${API}/transactions`, next).catch(() => {});
+      return next;
+    });
     if (res._queued) setPendingCount(c => c + 1);
     return data;
   }, []);
@@ -150,7 +191,11 @@ export function AuthProvider({ children }) {
   const deleteTransaction = useCallback(async (id) => {
     const res = await queuedAuthFetch(`${API}/transactions/${id}`, { method: 'DELETE' });
     if (!res.ok) return false;
-    setTransactions(prev => prev.filter(tx => tx.id !== id));
+    setTransactions(prev => {
+      const next = prev.filter(tx => tx.id !== id);
+      setCached(`${API}/transactions`, next).catch(() => {});
+      return next;
+    });
     if (res._queued) setPendingCount(c => c + 1);
     return true;
   }, []);
@@ -164,7 +209,11 @@ export function AuthProvider({ children }) {
     if (!res.ok) return null;
     const data = await res.json();
     if (!data?.id) return null;
-    setTransactions(prev => prev.map(tx => tx.id === id ? data : tx));
+    setTransactions(prev => {
+      const next = prev.map(tx => tx.id === id ? data : tx);
+      setCached(`${API}/transactions`, next).catch(() => {});
+      return next;
+    });
     if (res._queued) setPendingCount(c => c + 1);
     return data;
   }, []);

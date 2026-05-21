@@ -8,6 +8,7 @@ import { useToast } from '../../context/ToastContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
 import { API, authFetch, queuedAuthFetch } from '../../utils/api';
+import { cacheFetch, setCached } from '../../utils/cacheFetch';
 import { notifyGoalProgress } from '../../utils/notifications';
 import { fmt } from '../../utils/format';
 import Card from '../../components/Card';
@@ -38,11 +39,10 @@ export default function GoalsScreen() {
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   useEffect(() => {
-    authFetch(`${API}/goals`)
-      .then(r => r.json())
-      .then(d => { if (Array.isArray(d)) setGoals(d); })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    cacheFetch(`${API}/goals`, (d) => {
+      if (Array.isArray(d)) setGoals(d);
+      setLoading(false);
+    });
   }, [syncVersion]);
 
   const openAdd = () => {
@@ -81,7 +81,11 @@ export default function GoalsScreen() {
       });
       if (res.ok) {
         const data = await res.json();
-        setGoals(prev => editingGoal ? prev.map(g => g.id === editingGoal.id ? data : g) : [...prev, data]);
+        setGoals(prev => {
+          const next = editingGoal ? prev.map(g => g.id === editingGoal.id ? data : g) : [...prev, data];
+          setCached(`${API}/goals`, next).catch(() => {});
+          return next;
+        });
         showToast(t('toastGoalSaved'));
         setShowModal(false);
         const target = parseFloat(data.target_amount) || 0;
@@ -109,7 +113,11 @@ export default function GoalsScreen() {
     setDeleteTarget(null);
     const res = await queuedAuthFetch(`${API}/goals/${g.id}`, { method: 'DELETE' });
     if (res.ok) {
-      setGoals(prev => prev.filter(x => x.id !== g.id));
+      setGoals(prev => {
+        const next = prev.filter(x => x.id !== g.id);
+        setCached(`${API}/goals`, next).catch(() => {});
+        return next;
+      });
       showToast(t('toastGoalDeleted'));
     }
   };

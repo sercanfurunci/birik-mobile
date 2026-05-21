@@ -78,6 +78,30 @@ export async function removeFromQueue(tempId) {
   await writeIndex(ids.filter(id => id !== tempId));
 }
 
+export async function findInQueue(tempId) {
+  await ensureMigrated();
+  try {
+    const raw = await SecureStore.getItemAsync(itemKey(tempId));
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function updateQueueItem(tempId, patch) {
+  await ensureMigrated();
+  try {
+    const raw = await SecureStore.getItemAsync(itemKey(tempId));
+    if (!raw) return false;
+    const item = JSON.parse(raw);
+    const updated = { ...item, ...patch };
+    await SecureStore.setItemAsync(itemKey(tempId), JSON.stringify(updated));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function clearQueue() {
   await ensureMigrated();
   const ids = await readIndex();

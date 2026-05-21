@@ -12,6 +12,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API, authFetch, queuedAuthFetch } from '../../utils/api';
+import { cacheFetch } from '../../utils/cacheFetch';
 import { scheduleSubscriptionReminders } from '../../utils/notifications';
 import { fmt } from '../../utils/format';
 import { todayLocalISO, parseLocalDate, advanceToNextBilling } from '../../utils/dateUtils';
@@ -373,23 +374,19 @@ export default function SubscriptionsScreen() {
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   useEffect(() => {
-    authFetch(`${API}/subscriptions`)
-      .then(r => r.json())
-      .then(async d => {
-        if (!Array.isArray(d)) return;
-        setSubs(d);
-        scheduleSubscriptionReminders(d).catch(() => {});
-        // Fetch exchange rates for all unique currencies
-        const uniqueCurrencies = [...new Set(d.map(s => s.currency).filter(c => c && c !== userCurrency))];
-        const ratesObj = {};
-        await Promise.all(uniqueCurrencies.map(async fromCur => {
-          const rate = await getRate(fromCur, userCurrency);
-          if (rate) ratesObj[fromCur] = rate;
-        }));
-        setRateMap(ratesObj);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    cacheFetch(`${API}/subscriptions`, async d => {
+      if (!Array.isArray(d)) return;
+      setSubs(d);
+      scheduleSubscriptionReminders(d).catch(() => {});
+      const uniqueCurrencies = [...new Set(d.map(s => s.currency).filter(c => c && c !== userCurrency))];
+      const ratesObj = {};
+      await Promise.all(uniqueCurrencies.map(async fromCur => {
+        const rate = await getRate(fromCur, userCurrency);
+        if (rate) ratesObj[fromCur] = rate;
+      }));
+      setRateMap(ratesObj);
+      setLoading(false);
+    });
   }, [userCurrency, syncVersion]);
 
   const resetForm = () => {

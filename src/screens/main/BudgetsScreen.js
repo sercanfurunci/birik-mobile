@@ -9,6 +9,7 @@ import { useCurrency } from '../../context/CurrencyContext';
 import { useCategories } from '../../context/CategoriesContext';
 import { useToast } from '../../context/ToastContext';
 import { API, authFetch, queuedAuthFetch } from '../../utils/api';
+import { cacheFetch, setCached } from '../../utils/cacheFetch';
 import { notifyBudgetExceeded, notifyBudgetWarning } from '../../utils/notifications';
 import { fmt } from '../../utils/format';
 import Card from '../../components/Card';
@@ -35,11 +36,10 @@ export default function BudgetsScreen() {
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   useEffect(() => {
-    authFetch(`${API}/budgets`)
-      .then(r => r.json())
-      .then(d => { if (Array.isArray(d)) setBudgets(d); })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    cacheFetch(`${API}/budgets`, (d) => {
+      if (Array.isArray(d)) setBudgets(d);
+      setLoading(false);
+    });
   }, [syncVersion]);
 
   const now = new Date();
@@ -92,9 +92,13 @@ export default function BudgetsScreen() {
       });
       if (res.ok) {
         const data = await res.json();
-        setBudgets(prev => editingBudget
-          ? prev.map(b => b.id === editingBudget.id ? data : b)
-          : [...prev, data]);
+        setBudgets(prev => {
+          const next = editingBudget
+            ? prev.map(b => b.id === editingBudget.id ? data : b)
+            : [...prev, data];
+          setCached(`${API}/budgets`, next).catch(() => {});
+          return next;
+        });
         showToast(t('toastBudgetSaved'));
         setShowModal(false);
       } else {
@@ -118,7 +122,11 @@ export default function BudgetsScreen() {
     setDeleteTarget(null);
     const res = await queuedAuthFetch(`${API}/budgets/${b.id}`, { method: 'DELETE' });
     if (res.ok) {
-      setBudgets(prev => prev.filter(x => x.id !== b.id));
+      setBudgets(prev => {
+        const next = prev.filter(x => x.id !== b.id);
+        setCached(`${API}/budgets`, next).catch(() => {});
+        return next;
+      });
       showToast(t('toastBudgetDeleted'));
     }
   };

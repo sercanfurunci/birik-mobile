@@ -10,6 +10,7 @@ import { useLang } from '../../context/LangContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useToast } from '../../context/ToastContext';
 import { API, authFetch, queuedAuthFetch } from '../../utils/api';
+import { cacheFetch } from '../../utils/cacheFetch';
 import { scheduleRecurringReminders } from '../../utils/notifications';
 import { useAuth } from '../../context/AuthContext';
 import { BASE_CATS, INCOME_ONLY_CATS } from '../../constants/categories';
@@ -62,15 +63,11 @@ export default function RecurringScreen({ navigation }) {
 
   const fetchRules = useCallback(async () => {
     setLoading(true);
-    try {
-      const res = await authFetch(`${API}/recurring`);
-      if (res.ok) {
-        const data = await res.json();
-        const rules = Array.isArray(data) ? data : [];
-        setRules(rules);
-        scheduleRecurringReminders(rules).catch(() => {});
-      }
-    } catch {}
+    await cacheFetch(`${API}/recurring`, (data) => {
+      const rules = Array.isArray(data) ? data : [];
+      setRules(rules);
+      scheduleRecurringReminders(rules).catch(() => {});
+    });
     setLoading(false);
   }, []);
 
