@@ -1,6 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { Animated } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { useFonts } from 'expo-font';
+import { DMSerifDisplay_400Regular } from '@expo-google-fonts/dm-serif-display';
+import {
+  Outfit_400Regular, Outfit_500Medium, Outfit_600SemiBold, Outfit_700Bold,
+} from '@expo-google-fonts/outfit';
+import {
+  JetBrainsMono_400Regular, JetBrainsMono_500Medium, JetBrainsMono_700Bold,
+} from '@expo-google-fonts/jetbrains-mono';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { LangProvider, useLang } from './src/context/LangContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
@@ -27,6 +35,11 @@ function AppContent() {
   const { langChecked } = useLang();
   const { currentUser, authChecked, updateUser, syncVersion } = useAuth();
   const [minElapsed, setMinElapsed] = useState(false);
+  const [fontsLoaded] = useFonts({
+    DMSerifDisplay_400Regular,
+    Outfit_400Regular, Outfit_500Medium, Outfit_600SemiBold, Outfit_700Bold,
+    JetBrainsMono_400Regular, JetBrainsMono_500Medium, JetBrainsMono_700Bold,
+  });
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const prevIsDark = useRef(null);
 
@@ -87,7 +100,7 @@ function AppContent() {
     } catch {}
   };
 
-  if (!authChecked || !themeChecked || !langChecked || !minElapsed) {
+  if (!authChecked || !themeChecked || !langChecked || !fontsLoaded || !minElapsed) {
     return <Splash />;
   }
 

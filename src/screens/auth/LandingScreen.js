@@ -1,15 +1,17 @@
 import { View, Text, TouchableOpacity, StyleSheet, StatusBar, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { useLang } from '../../context/LangContext';
+import { spacing, radius, type, fonts } from '../../constants/tokens';
 
 const FEATURES = [
-  { icon: '⚡', titleKey: 'landingFeature1Title', descKey: 'landingFeature1Desc' },
-  { icon: '📊', titleKey: 'landingFeature2Title', descKey: 'landingFeature2Desc' },
-  { icon: '🌍', titleKey: 'landingFeature3Title', descKey: 'landingFeature3Desc' },
-  { icon: '🤖', titleKey: 'landingFeature4Title', descKey: 'landingFeature4Desc' },
-  { icon: '🔔', titleKey: 'landingFeature5Title', descKey: 'landingFeature5Desc' },
-  { icon: '🎯', titleKey: 'landingFeature6Title', descKey: 'landingFeature6Desc' },
+  { icon: 'flash-outline',         titleKey: 'landingFeature1Title', descKey: 'landingFeature1Desc' },
+  { icon: 'stats-chart-outline',   titleKey: 'landingFeature2Title', descKey: 'landingFeature2Desc' },
+  { icon: 'globe-outline',         titleKey: 'landingFeature3Title', descKey: 'landingFeature3Desc' },
+  { icon: 'sparkles-outline',      titleKey: 'landingFeature4Title', descKey: 'landingFeature4Desc' },
+  { icon: 'notifications-outline', titleKey: 'landingFeature5Title', descKey: 'landingFeature5Desc' },
+  { icon: 'trophy-outline',        titleKey: 'landingFeature6Title', descKey: 'landingFeature6Desc' },
 ];
 
 export default function LandingScreen({ navigation }) {
@@ -27,12 +29,12 @@ export default function LandingScreen({ navigation }) {
             <Image source={require('../../../assets/birik-icon-fg.png')} style={styles.logoImg} />
             <Text style={[styles.brandName, { color: colors.text1 }]}>{t('appName')}</Text>
           </View>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
             <TouchableOpacity onPress={toggleLang} style={[styles.iconBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-              <Text style={{ color: colors.text2, fontSize: 12, fontWeight: '600' }}>{lang === 'tr' ? 'EN' : 'TR'}</Text>
+              <Text style={{ color: colors.text2, ...type.bodyMd, fontFamily: fonts.bodySemibold, fontSize: 12 }}>{lang === 'tr' ? 'EN' : 'TR'}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={toggleTheme} style={[styles.iconBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-              <Text style={{ fontSize: 14 }}>{isDark ? '☀️' : '🌙'}</Text>
+              <Ionicons name={isDark ? 'sunny-outline' : 'moon-outline'} size={16} color={colors.text2} />
             </TouchableOpacity>
           </View>
         </View>
@@ -40,7 +42,7 @@ export default function LandingScreen({ navigation }) {
         {/* Hero */}
         <View style={styles.hero}>
           <View style={[styles.tag, { backgroundColor: colors.brandDim }]}>
-            <Text style={{ color: colors.brand, fontSize: 12, fontWeight: '600' }}>{t('landingTagline')}</Text>
+            <Text style={{ color: colors.brand, ...type.label }}>{t('landingTagline')}</Text>
           </View>
 
           <Text style={[styles.headline, { color: colors.text1 }]}>
@@ -55,27 +57,33 @@ export default function LandingScreen({ navigation }) {
           <TouchableOpacity
             onPress={() => navigation.navigate('Register')}
             style={[styles.primaryBtn, { backgroundColor: colors.brand }]}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
           >
             <Text style={styles.primaryBtnText}>{t('landingGetStarted')}</Text>
+            <Ionicons name="arrow-forward" size={18} color="#fff" />
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => navigation.navigate('Login')}
             style={[styles.secondaryBtn, { borderColor: colors.border }]}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
           >
-            <Text style={[styles.secondaryBtnText, { color: colors.text2 }]}>{t('landingSignIn')}</Text>
+            <Text style={[styles.secondaryBtnText, { color: colors.text1 }]}>{t('landingSignIn')}</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Section label */}
+        <Text style={[styles.sectionLabel, { color: colors.text3 }]}>{t('landingFeaturesLabel') || 'Features'}</Text>
 
         {/* Features */}
         {FEATURES.map((f, i) => (
           <View key={i} style={[styles.featureCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Text style={styles.featureIcon}>{f.icon}</Text>
+            <View style={[styles.featureIconWrap, { backgroundColor: colors.brandDim }]}>
+              <Ionicons name={f.icon} size={20} color={colors.brand} />
+            </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.featureTitle, { color: colors.text1 }]}>{t(f.titleKey)}</Text>
-              <Text style={[styles.featureDesc, { color: colors.text3 }]}>{t(f.descKey)}</Text>
+              <Text style={[styles.featureDesc, { color: colors.text2 }]}>{t(f.descKey)}</Text>
             </View>
           </View>
         ))}
@@ -83,14 +91,15 @@ export default function LandingScreen({ navigation }) {
         {/* CTA */}
         <View style={[styles.cta, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <Text style={[styles.ctaTitle, { color: colors.text1 }]}>{t('landingCtaTitle')}</Text>
+          <Text style={[styles.ctaSub, { color: colors.text3 }]}>{t('landingCtaSub')}</Text>
           <TouchableOpacity
             onPress={() => navigation.navigate('Register')}
-            style={[styles.primaryBtn, { backgroundColor: colors.brand }]}
-            activeOpacity={0.8}
+            style={[styles.primaryBtn, { backgroundColor: colors.brand, marginTop: spacing.lg, marginBottom: 0 }]}
+            activeOpacity={0.85}
           >
             <Text style={styles.primaryBtnText}>{t('landingGetStarted')}</Text>
+            <Ionicons name="arrow-forward" size={18} color="#fff" />
           </TouchableOpacity>
-          <Text style={{ color: colors.text3, fontSize: 12, marginTop: 8 }}>{t('landingCtaSub')}</Text>
         </View>
 
       </ScrollView>
@@ -99,24 +108,46 @@ export default function LandingScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { paddingHorizontal: 20, paddingBottom: 40 },
-  topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, marginBottom: 40 },
-  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  logoImg: { width: 48, height: 48 },
-  brandName: { fontSize: 20, fontWeight: '800', letterSpacing: -0.5 },
-  iconBtn: { width: 36, height: 36, borderRadius: 8, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
-  hero: { alignItems: 'center', marginBottom: 40 },
-  tag: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 20 },
-  headline: { fontSize: 44, fontWeight: '700', textAlign: 'center', lineHeight: 50, marginBottom: 16, letterSpacing: -1 },
-  subtitle: { fontSize: 16, textAlign: 'center', lineHeight: 24, marginBottom: 32, paddingHorizontal: 20 },
-  primaryBtn: { width: '100%', height: 52, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
-  primaryBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  secondaryBtn: { width: '100%', height: 52, borderRadius: 14, justifyContent: 'center', alignItems: 'center', borderWidth: 1 },
-  secondaryBtnText: { fontSize: 16, fontWeight: '600' },
-  featureCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, padding: 16, borderRadius: 14, borderWidth: 1, marginBottom: 10 },
-  featureIcon: { fontSize: 24, marginTop: 2 },
-  featureTitle: { fontSize: 15, fontWeight: '600', marginBottom: 4 },
-  featureDesc: { fontSize: 13, lineHeight: 20 },
-  cta: { padding: 24, borderRadius: 18, borderWidth: 1, alignItems: 'center', marginTop: 10 },
-  ctaTitle: { fontSize: 22, fontWeight: '700', marginBottom: 16, letterSpacing: -0.5 },
+  container: { paddingHorizontal: spacing.xl, paddingBottom: spacing['4xl'] },
+
+  topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: spacing.md, marginBottom: spacing['4xl'] },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  logoImg: { width: 44, height: 44 },
+  brandName: { ...type.h2Serif, fontSize: 22 },
+  iconBtn: { width: 38, height: 38, borderRadius: radius.md, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
+
+  hero: { alignItems: 'center', marginBottom: spacing['4xl'] },
+  tag: { paddingHorizontal: spacing.md, paddingVertical: 6, borderRadius: radius.pill, marginBottom: spacing.xl },
+  headline: { ...type.heroSerif, textAlign: 'center', marginBottom: spacing.lg },
+  subtitle: { ...type.bodyLg, textAlign: 'center', marginBottom: spacing['2xl'], paddingHorizontal: spacing.lg },
+
+  primaryBtn: {
+    width: '100%', height: 54, borderRadius: radius.lg, justifyContent: 'center', alignItems: 'center',
+    flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md,
+  },
+  primaryBtnText: { color: '#fff', fontFamily: fonts.bodySemibold, fontSize: 15, letterSpacing: -0.2 },
+
+  secondaryBtn: {
+    width: '100%', height: 54, borderRadius: radius.lg, justifyContent: 'center', alignItems: 'center', borderWidth: 1,
+  },
+  secondaryBtnText: { fontFamily: fonts.bodyMedium, fontSize: 15, letterSpacing: -0.2 },
+
+  sectionLabel: { ...type.label, marginBottom: spacing.md, marginLeft: spacing.xs },
+
+  featureCard: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md,
+    padding: spacing.lg, borderRadius: radius.lg, borderWidth: 1, marginBottom: spacing.sm,
+  },
+  featureIconWrap: {
+    width: 40, height: 40, borderRadius: radius.md, justifyContent: 'center', alignItems: 'center',
+  },
+  featureTitle: { fontFamily: fonts.bodySemibold, fontSize: 15, marginBottom: 3, letterSpacing: -0.2 },
+  featureDesc: { ...type.caption },
+
+  cta: {
+    padding: spacing['2xl'], borderRadius: radius.xl, borderWidth: 1,
+    alignItems: 'center', marginTop: spacing.xl,
+  },
+  ctaTitle: { ...type.h1Serif, fontSize: 26, lineHeight: 32, textAlign: 'center', marginBottom: spacing.sm },
+  ctaSub: { ...type.caption, textAlign: 'center' },
 });
